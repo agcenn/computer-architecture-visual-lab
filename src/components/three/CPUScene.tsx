@@ -1,7 +1,7 @@
 import { Component, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Line, OrbitControls, RoundedBox } from '@react-three/drei';
-import { Color, Quaternion, Vector3, type Camera, type Mesh } from 'three';
+import { Quaternion, Vector3, type Camera, type Mesh } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useCPUStore } from '../../store/cpuStore';
 import { componentInfo } from '../../data/modules';
@@ -20,9 +20,9 @@ const positions: Record<ComponentId, Point> = {
   cache: [5.7, 0, 4.1], bus: [-3.5, 0, 4.2],
 };
 const colors: Record<ComponentId, string> = {
-  pc: '#5794ff', instructionMemory: '#5b95ff', instructionRegister: '#709cff',
-  controlUnit: '#ad83fa', registerFile: '#6597ff', mux: '#edb552',
-  alu: '#5d97ff', dataMemory: '#5dde9b', cache: '#5cced9', bus: '#e8a452',
+  pc: '#0071e3', instructionMemory: '#327ac1', instructionRegister: '#507dae',
+  controlUnit: '#8064a8', registerFile: '#3d75aa', mux: '#ab7730',
+  alu: '#0071e3', dataMemory: '#388b68', cache: '#328890', bus: '#ab7730',
 };
 const dimensions: Record<ComponentId, [number, number]> = {
   pc: [1.8, 1.7], instructionMemory: [2.7, 1.9], instructionRegister: [2.2, 1.6],
@@ -30,7 +30,7 @@ const dimensions: Record<ComponentId, [number, number]> = {
   alu: [2.5, 2.6], dataMemory: [2.7, 2.5], cache: [2.7, 1.4], bus: [6.0, 0.8],
 };
 const flowColors: Record<string, string> = {
-  address: '#7bb1ff', data: '#ffbb69', control: '#bc94ff', memory: '#69e7b2',
+  address: '#0071e3', data: '#9a641c', control: '#8064a8', memory: '#267049',
 };
 
 // Labels belong to the application's DOM tree. The Three renderer only updates
@@ -115,18 +115,18 @@ export function DataFlow({ flow, index = 0, playing = false, speed = 1, labels, 
     if (labels && labelKey) projectLabel(labels.current[labelKey], new Vector3(point.x, 1.1, point.z - 0.2), camera, size, 17);
   });
   return <group>
-    <Line points={points} color={color} lineWidth={3.3} transparent opacity={0.85} />
+    <Line points={points} color={color} lineWidth={3} transparent opacity={0.9} />
     <mesh position={arrow.point} quaternion={arrow.rotation}><coneGeometry args={[0.1, 0.28, 6]} /><meshBasicMaterial color={color} /></mesh>
     <mesh ref={dot}><sphereGeometry args={[0.12, 12, 12]} /><meshBasicMaterial color={color} /></mesh>
   </group>;
 }
 
-function Pins({ width, depth, color, muted }: { width: number; depth: number; color: string; muted: boolean }) {
+function Pins({ width, depth, muted }: { width: number; depth: number; muted: boolean }) {
   const count = Math.max(4, Math.round(width * 3));
   return <group>
     {Array.from({ length: count }, (_, i) => (i - (count - 1) / 2) * width / count).flatMap((x, i) =>
       [-1, 1].map(side => <mesh key={`${i}-${side}`} position={[x, 0.13, side * (depth / 2 + 0.13)]}>
-        <boxGeometry args={[0.08, 0.11, 0.28]} /><meshStandardMaterial color={muted ? '#343d4d' : color} metalness={0.8} roughness={0.4} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
+        <boxGeometry args={[0.08, 0.11, 0.28]} /><meshStandardMaterial color={muted ? '#c0c2c6' : '#c6c8cd'} metalness={0.75} roughness={0.34} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
       </mesh>))}
   </group>;
 }
@@ -134,30 +134,30 @@ function Pins({ width, depth, color, muted }: { width: number; depth: number; co
 function ChipContents({ id, color }: { id: ComponentId; color: string }) {
   if (id === 'registerFile') return <group position={[0, 0.58, 0]}>
     {Array.from({ length: 8 }, (_, i) => <mesh key={i} position={[0, 0, (i - 3.5) * 0.22]}>
-      <boxGeometry args={[1.8, 0.05, 0.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.15} />
+      <boxGeometry args={[1.8, 0.05, 0.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.015} metalness={0.45} roughness={0.48} />
     </mesh>)}
   </group>;
   if (id === 'dataMemory' || id === 'instructionMemory' || id === 'cache') return <group position={[0, 0.61, 0]}>
     {Array.from({ length: id === 'cache' ? 6 : 9 }, (_, i) => <mesh key={i} position={[(i % 3 - 1) * 0.54, 0, (Math.floor(i / 3) - (id === 'cache' ? 0.5 : 1)) * 0.37]}>
-      <boxGeometry args={[0.4, 0.055, 0.24]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.17} metalness={0.5} roughness={0.4} />
+      <boxGeometry args={[0.4, 0.055, 0.24]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.015} metalness={0.5} roughness={0.4} />
     </mesh>)}
   </group>;
   if (id === 'bus') return <group position={[0, 0.52, 0]}>
     {[-1, 0, 1].map((z, i) => <mesh key={z} position={[0, 0, z * 0.13]}>
-      <boxGeometry args={[5.4, 0.035, 0.035]} /><meshStandardMaterial color={['#5794ff', '#e8a452', '#ad83fa'][i]} emissive={color} emissiveIntensity={0.25} />
+      <boxGeometry args={[5.4, 0.035, 0.035]} /><meshStandardMaterial color={['#327ac1', '#ab7730', '#8064a8'][i]} emissive={color} emissiveIntensity={0.025} />
     </mesh>)}
   </group>;
   if (id === 'mux') return <mesh position={[0, 0.58, 0]} rotation={[0, Math.PI / 4, 0]}>
     <boxGeometry args={[0.5, 0.08, 0.5]} /><meshStandardMaterial color={color} metalness={0.7} roughness={0.3} />
   </mesh>;
   if (id === 'alu') return <group position={[0, 0.58, 0]}>
-    <RoundedBox args={[1.3, 0.08, 1.3]} radius={0.14}><meshStandardMaterial color="#4b73b7" emissive={color} emissiveIntensity={0.16} metalness={0.5} /></RoundedBox>
-    <mesh position={[0, 0.06, 0]}><boxGeometry args={[0.7, 0.035, 0.7]} /><meshStandardMaterial color="#7597c9" metalness={0.65} roughness={0.25} /></mesh>
+    <RoundedBox args={[1.3, 0.08, 1.3]} radius={0.14}><meshStandardMaterial color="#858b94" emissive={color} emissiveIntensity={0.025} metalness={0.65} roughness={0.34} /></RoundedBox>
+    <mesh position={[0, 0.06, 0]}><boxGeometry args={[0.7, 0.035, 0.7]} /><meshStandardMaterial color="#c6cbd2" metalness={0.65} roughness={0.25} /></mesh>
     {[-1, 1].map(x => <mesh key={x} position={[x * 0.87, 0, 0]}><boxGeometry args={[0.11, 0.05, 1.2]} /><meshStandardMaterial color={color} /></mesh>)}
   </group>;
   return <group position={[0, 0.58, 0]}>
     {[-1, 0, 1].map(i => <mesh key={i} position={[i * 0.43, 0, 0]}>
-      <boxGeometry args={[0.27, 0.05, 0.66]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.17} />
+      <boxGeometry args={[0.27, 0.05, 0.66]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.015} />
     </mesh>)}
   </group>;
 }
@@ -180,12 +180,12 @@ function Module({ id, active, labels }: { id: ComponentId; active: boolean; labe
     onPointerOver={event => { event.stopPropagation(); document.body.style.cursor = 'pointer'; }}
     onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
     <RoundedBox ref={glow} args={[width + 0.12, 0.12, depth + 0.12]} radius={0.1} position={[0, 0.1, 0]}>
-      <meshStandardMaterial color={chosen || active ? color : '#263850'} emissive={color} emissiveIntensity={muted ? 0.015 : chosen ? 0.7 : active ? 0.4 : 0.07} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
+      <meshStandardMaterial color={chosen ? '#0071e3' : active ? color : '#b9bec5'} metalness={0.45} roughness={0.38} emissive={chosen ? '#0071e3' : color} emissiveIntensity={muted ? 0 : chosen ? 0.12 : active ? 0.06 : 0} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
     </RoundedBox>
     <RoundedBox args={[width, id === 'bus' ? 0.26 : 0.46, depth]} radius={0.13} position={[0, 0.3, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color={muted ? '#172132' : new Color(color).multiplyScalar(0.22)} roughness={0.36} metalness={0.62} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
+      <meshStandardMaterial color={muted ? '#72767e' : chosen ? '#3b414b' : '#34373c'} roughness={0.42} metalness={0.48} transparent={muted} opacity={muted ? 0.28 : 1} depthWrite={!muted} />
     </RoundedBox>
-    <Pins width={width} depth={depth} color={color} muted={muted} />
+    <Pins width={width} depth={depth} muted={muted} />
     <group visible={!muted}><ChipContents id={id} color={color} /></group>
     <mesh position={[-width / 2 + 0.16, 0.56, -depth / 2 + 0.16]} rotation={[-Math.PI / 2, 0, 0]}>
       <circleGeometry args={[0.035, 10]} /><meshBasicMaterial color={color} transparent={muted} opacity={muted ? 0.28 : 1} />
@@ -197,29 +197,29 @@ function Board({ labels }: { labels: LabelRegistry }) {
   const silkscreenPosition = useMemo(() => new Vector3(-7.2, 0.08, 5.05), []);
   useFrame(({ camera, size }) => projectLabel(labels.current.board, silkscreenPosition, camera, size, 8));
   const staticRoutes: [ComponentId, ComponentId, string][] = [
-    ['pc', 'instructionMemory', '#5377a8'], ['instructionMemory', 'instructionRegister', '#5377a8'],
-    ['instructionRegister', 'controlUnit', '#715794'], ['controlUnit', 'registerFile', '#715794'],
-    ['controlUnit', 'alu', '#715794'], ['registerFile', 'mux', '#886545'],
-    ['registerFile', 'alu', '#886545'],
-    ['mux', 'alu', '#886545'], ['alu', 'dataMemory', '#537e67'],
-    ['dataMemory', 'cache', '#497e82'], ['alu', 'registerFile', '#886545'],
+    ['pc', 'instructionMemory', '#7294b8'], ['instructionMemory', 'instructionRegister', '#7294b8'],
+    ['instructionRegister', 'controlUnit', '#9a8dad'], ['controlUnit', 'registerFile', '#9a8dad'],
+    ['controlUnit', 'alu', '#9a8dad'], ['registerFile', 'mux', '#ab9679'],
+    ['registerFile', 'alu', '#ab9679'],
+    ['mux', 'alu', '#ab9679'], ['alu', 'dataMemory', '#81a594'],
+    ['dataMemory', 'cache', '#82a6a9'], ['alu', 'registerFile', '#ab9679'],
   ];
   return <group>
     <RoundedBox args={[20, 0.45, 12.8]} radius={0.35} position={[0, -0.32, 0.15]} castShadow receiveShadow>
-      <meshStandardMaterial color="#121d2c" roughness={0.5} metalness={0.68} />
+      <meshStandardMaterial color="#b7bbc2" roughness={0.35} metalness={0.55} />
     </RoundedBox>
     <RoundedBox args={[19.65, 0.07, 12.45]} radius={0.3} position={[0, -0.075, 0.15]} receiveShadow>
-      <meshStandardMaterial color="#182334" roughness={0.66} metalness={0.45} />
+      <meshStandardMaterial color="#e0e2e6" roughness={0.48} metalness={0.32} />
     </RoundedBox>
-    {staticRoutes.map(([from, to, color]) => <Line key={`${from}-${to}`} points={pathBetween(from, to)} color={color} lineWidth={1.3} transparent opacity={0.56} />)}
+    {staticRoutes.map(([from, to, color]) => <Line key={`${from}-${to}`} points={pathBetween(from, to)} color={color} lineWidth={1.2} transparent opacity={0.68} />)}
     {[-9.2, 9.2].flatMap(x => [-5.6, 5.8].map(z => <mesh key={`${x}-${z}`} position={[x, 0.02, z]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[0.12, 0.21, 24]} /><meshStandardMaterial color="#8c9baf" metalness={0.85} roughness={0.2} />
+      <ringGeometry args={[0.12, 0.21, 24]} /><meshStandardMaterial color="#989da5" metalness={0.85} roughness={0.2} />
     </mesh>))}
     {Array.from({ length: 28 }, (_, i) => <mesh key={`contact-${i}`} position={[-6.9 + i * 0.5, -0.02, 6.27]}>
-      <boxGeometry args={[0.25, 0.045, 0.34]} /><meshStandardMaterial color="#786753" roughness={0.35} metalness={0.8} />
+      <boxGeometry args={[0.25, 0.045, 0.34]} /><meshStandardMaterial color="#b39d7d" roughness={0.36} metalness={0.65} />
     </mesh>)}
     {Array.from({ length: 16 }, (_, i) => <mesh key={`resistor-${i}`} position={[-8.2 + (i % 8) * 0.25, 0.03, 2.7 + Math.floor(i / 8) * 0.25]}>
-      <boxGeometry args={[0.11, 0.08, 0.12]} /><meshStandardMaterial color={i % 4 === 0 ? '#a08c70' : '#425064'} roughness={0.5} metalness={0.4} />
+      <boxGeometry args={[0.11, 0.08, 0.12]} /><meshStandardMaterial color={i % 4 === 0 ? '#b4a591' : '#7b8088'} roughness={0.5} metalness={0.4} />
     </mesh>)}
   </group>;
 }
@@ -255,19 +255,18 @@ function Processor({ compact, resetKey, topView, labels }: { compact: boolean; r
   const details = getStepDetails(state);
   const activeComponents = details.activeComponents;
   return <>
-    <color attach="background" args={['#090c12']} />
-    <fog attach="fog" args={['#090c12', 37, 65]} />
-    <ambientLight intensity={1.6} />
-    <hemisphereLight args={['#b5d3ff', '#122035', 1.8]} />
-    <directionalLight position={[3, 16, 8]} intensity={2.8} color="#d0e1ff" castShadow shadow-mapSize={[1024, 1024]} shadow-camera-left={-15} shadow-camera-right={15} shadow-camera-top={15} shadow-camera-bottom={-15} />
-    <pointLight position={[-8, 5, -3]} intensity={30} color="#3877ee" distance={20} />
-    <pointLight position={[7, 5, 2]} intensity={23} color="#5ac9ba" distance={18} />
+    <color attach="background" args={['#f5f5f7']} />
+    <fog attach="fog" args={['#f5f5f7', 42, 72]} />
+    <ambientLight intensity={1.05} />
+    <hemisphereLight args={['#ffffff', '#c8cbd1', 1.65]} />
+    <directionalLight position={[-6, 18, 9]} intensity={2.5} color="#ffffff" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={16} shadow-camera-bottom={-16} shadow-normalBias={0.04} shadow-radius={4} />
+    <directionalLight position={[8, 7, -9]} intensity={1.25} color="#e7ebf3" />
     <Board labels={labels} />
     {(Object.keys(positions) as ComponentId[]).map(id => <Module key={id} id={id} active={activeComponents.includes(id)} labels={labels} />)}
     {!compact && details.flows.map((flow, i) => <DataFlow key={`${state.step}-${flow.from}-${flow.to}-${i}`} flow={flow} index={i} playing={state.playing} speed={state.speed} labels={labels} labelKey={`flow-${state.step}-${i}`} />)}
     {!compact && state.step === 3 && <DataFlow flow={{ from: 'alu', to: 'alu', type: 'data', label: `${details.operandA} + ${details.operandB} = ${details.result}` }} playing={state.playing} speed={state.speed} labels={labels} labelKey="flow-execute-result" />}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.57, 0]} receiveShadow>
-      <planeGeometry args={[200, 200]} /><meshStandardMaterial color="#0a101a" roughness={0.9} metalness={0.1} />
+      <planeGeometry args={[200, 200]} /><meshStandardMaterial color="#f5f5f7" roughness={0.96} metalness={0} />
     </mesh>
     <CameraRig selected={compact ? null : state.selectedComponent} resetKey={resetKey} topView={topView} compact={compact} />
   </>;
@@ -343,13 +342,13 @@ export function CPUScene({ compact = false }: { compact?: boolean }) {
     </SceneErrorBoundary>
     {!sceneFailed && <SceneLabels compact={compact} labels={labels} />}
     {!compact && <>
-      <div className="cpu-scene-status"><span /><strong>LIVE MODEL</strong><span className="cpu-scene-status-note">32-bit · 8 registers</span></div>
+      <div className="cpu-scene-status"><span /><strong>CPU 结构</strong><span className="cpu-scene-status-note">32-bit · 8 registers</span></div>
       <div className="cpu-scene-tools">
         <button onClick={reset} title="重置视角" aria-label="重置视角"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1.5 7M4 4v6h6" /></svg></button>
         <button onClick={() => setTopView(value => !value)} title="切换俯视" aria-label="切换俯视" aria-pressed={topView}><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5" /></svg></button>
         <button onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void container.current?.requestFullscreen(); }} title="全屏模型" aria-label="全屏模型"><svg viewBox="0 0 24 24"><path d="M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5" /></svg></button>
       </div>
-      <div className="cpu-scene-legend"><span><i style={{ background: '#ffbb69' }} />数据</span><span><i style={{ background: '#7bb1ff' }} />地址</span><span><i style={{ background: '#bc94ff' }} />控制</span><span><i style={{ background: '#69e7b2' }} />存储</span></div>
+      <div className="cpu-scene-legend"><span><i style={{ background: flowColors.data }} />数据</span><span><i style={{ background: flowColors.address }} />地址</span><span><i style={{ background: flowColors.control }} />控制</span><span><i style={{ background: flowColors.memory }} />存储</span></div>
       <span className="cpu-scene-help">拖动旋转 <b>·</b> 滚轮缩放 <b>·</b> 右键平移</span>
     </>}
   </div>;

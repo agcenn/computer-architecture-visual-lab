@@ -1,45 +1,144 @@
-import { Suspense, lazy } from 'react';
-import { ArrowDown, ArrowRight, Box, ChevronRight, Layers3, MousePointer2, Play } from 'lucide-react';
+import { Suspense, lazy, useEffect, type MouseEvent } from 'react';
+import { ArrowRight, ChevronRight, MousePointer2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../components/layout/Brand';
 import { SceneBoundary } from '../components/layout/SceneBoundary';
 import { courseModules } from '../data/modules';
+import './Home.css';
 
 const CPUScene = lazy(() => import('../components/three/CPUScene'));
 
+const courseDescriptions: Record<string, string> = {
+  overview: '从整体开始。认识 CPU 中的每个组件，了解它们如何一起工作。',
+  datapath: '让数据流动起来。沿着连接，观察地址、数据与控制信号的传递。',
+  instruction: '跟随一条 ADD 指令。从取指到写回，亲手走完一次计算。',
+};
+
+function scrollToCourses(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault();
+  document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function CourseIllustration({ moduleId }: { moduleId: string }) {
+  if (moduleId === 'overview') {
+    return <div className="apple-course-art apple-overview-art" aria-hidden="true">
+      <div className="apple-mini-board">
+        <span className="apple-mini-chip apple-mini-chip-cpu">CPU</span>
+        <span className="apple-mini-chip apple-mini-chip-memory">MEMORY</span>
+        <span className="apple-mini-chip apple-mini-chip-io">I/O</span>
+        <span className="apple-mini-trace apple-mini-trace-one" />
+        <span className="apple-mini-trace apple-mini-trace-two" />
+      </div>
+    </div>;
+  }
+  if (moduleId === 'datapath') {
+    return <div className="apple-course-art apple-datapath-art" aria-hidden="true">
+      <div className="apple-data-node">R2 · R3</div>
+      <span className="apple-data-line" />
+      <div className="apple-data-node apple-data-node-main">ALU</div>
+      <span className="apple-data-line" />
+      <div className="apple-data-node">R1</div>
+    </div>;
+  }
+  return <div className="apple-course-art apple-instruction-art" aria-hidden="true">
+    <div className="apple-add-equation"><span>5</span><span>+</span><span>7</span><span>=</span><strong>12</strong></div>
+    <code>ADD R1, R2, R3</code>
+    <div className="apple-instruction-progress"><i /><i /><i /><i /><i /></div>
+  </div>;
+}
+
 export default function Home() {
-  return <div className="home-page">
-    <header className="home-header container">
-      <Brand />
-      <nav aria-label="主导航"><a href="#courses" onClick={(event) => { event.preventDefault(); document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' }); }}>课程模块</a><Link className="header-lab-link" to="/lab">打开实验室 <ArrowRight size={15} /></Link></nav>
+  useEffect(() => { document.title = 'Computer Architecture Visual Lab · 计算机组成原理实验室'; }, []);
+  const availableCourses = courseModules.filter((module) => module.available);
+  const plannedCourses = courseModules.filter((module) => !module.available);
+
+  return <div className="apple-home">
+    <header className="apple-header">
+      <div className="apple-header-inner">
+        <Brand />
+        <nav aria-label="主导航">
+          <a className="apple-nav-courses" href="#courses" onClick={scrollToCourses}>课程</a>
+          <Link className="apple-nav-lab" to="/lab">打开实验室 <ChevronRight size={14} /></Link>
+        </nav>
+      </div>
     </header>
+
     <main>
-      <section className="hero container" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <div className="eyebrow"><span className="status-dot" /> INTERACTIVE LEARNING LAB</div>
-          <h1 id="hero-title">看见 CPU 内部<br />真正发生了<span className="title-accent">什么。</span></h1>
-          <p className="hero-english">Computer Architecture<br />Visual Lab</p>
-          <p className="hero-description">让抽象原理变得触手可及。走进三维数据通路，<br className="desktop-break" />跟随一条指令，理解每一次计算。</p>
-          <div className="hero-actions"><Link to="/lab?module=instruction" className="button primary">开始探索 <ArrowRight size={17} /></Link><a href="#courses" className="text-button" onClick={(event) => { event.preventDefault(); document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' }); }}>浏览课程 <ArrowDown size={15} /></a></div>
-          <div className="hero-meta"><span><Box size={14} /> 可交互 3D 模型</span><span><Play size={13} /> 逐步指令执行</span></div>
+      <section className="apple-hero" aria-labelledby="hero-title">
+        <div className="apple-hero-copy">
+          <p className="apple-eyebrow">Computer Architecture Visual Lab</p>
+          <h1 id="hero-title">让计算机组成，<br />一目了然。</h1>
+          <p className="apple-hero-description">走进 CPU 的内部。<br className="apple-mobile-break" />让抽象的原理，成为看得见的过程。</p>
+          <div className="apple-hero-actions">
+            <Link to="/lab?module=instruction" className="apple-primary-link">开始探索 <ArrowRight size={16} /></Link>
+            <a href="#courses" className="apple-inline-link" onClick={scrollToCourses}>了解课程 <ChevronRight size={17} /></a>
+          </div>
         </div>
-        <div className="hero-visual">
-          <div className="scene-topline"><span><span className="tiny-square" /> CPU DATAPATH</span><span>MODEL 01 / 32-BIT</span></div>
-          <div className="home-scene"><SceneBoundary><Suspense fallback={<div className="scene-loading">正在构建 CPU 场景…</div>}><CPUScene compact /></Suspense></SceneBoundary></div>
-          <div className="scene-caption"><span><MousePointer2 size={13} /> 拖动旋转 · 滚轮缩放</span><span className="mono">PC → IR → ALU → REG</span></div>
+        <div className="apple-product-showcase">
+          <div className="apple-product-scene">
+            <SceneBoundary><Suspense fallback={<div className="apple-scene-loading">正在构建 CPU 场景…</div>}><CPUScene compact /></Suspense></SceneBoundary>
+          </div>
+          <div className="apple-product-caption"><span>你的第一台，透明的 CPU。</span><span><MousePointer2 size={13} /> 拖动旋转 · 滚轮缩放 · 点击组件</span></div>
+        </div>
+        <p className="apple-hero-footnote">可交互的 3D 教学模型。直接在浏览器中探索。</p>
+      </section>
+
+      <section className="apple-courses" id="courses" aria-labelledby="courses-title">
+        <div className="apple-section-copy">
+          <p className="apple-eyebrow">从理解，到亲手验证。</p>
+          <h2 id="courses-title">以探索的方式，学习。</h2>
+          <p>三个起点。由你选择。</p>
+        </div>
+        <div className="apple-course-grid">
+          {availableCourses.map((module, index) => <Link className="apple-course-card" key={module.id} to={`/lab?module=${module.id}`}>
+            <div className="apple-course-copy">
+              <p className="apple-course-kicker">{String(index + 1).padStart(2, '0')} / 已开放</p>
+              <h3>{module.subtitle}</h3>
+              <p className="apple-course-english">{module.title}</p>
+              <p className="apple-course-description">{courseDescriptions[module.id]}</p>
+            </div>
+            <CourseIllustration moduleId={module.id} />
+            <span className="apple-course-link">开始探索 <ChevronRight size={15} /></span>
+          </Link>)}
         </div>
       </section>
-      <section className="curriculum container" id="courses" aria-labelledby="courses-title">
-        <div className="section-heading"><div><span className="eyebrow muted">FROM STRUCTURE TO EXECUTION</span><h2 id="courses-title">从一条指令，理解一台计算机。</h2></div><div className="course-count"><span>03</span> / 10 模块已开放</div></div>
-        <div className="course-grid">
-          {courseModules.map((module, index) => {
-            const content = <><div className="course-card-top"><span className="course-number">{String(index + 1).padStart(2, '0')}</span>{module.available ? <ChevronRight size={16} /> : <span className="course-status">下一阶段</span>}</div><h3>{module.title}</h3><p>{module.subtitle}</p><div className="course-card-bottom">{module.available ? <><span className="available-dot" /> 进入实验</> : '课程规划'}</div></>;
-            return module.available ? <Link className={`course-card available ${index === 2 ? 'featured' : ''}`} key={module.id} to={`/lab?module=${module.id}`}>{content}</Link> : <article className="course-card planned" key={module.id}>{content}</article>;
-          })}
+
+      <section className="apple-learning" aria-labelledby="learning-title">
+        <div className="apple-learning-inner">
+          <div className="apple-learning-copy">
+            <p className="apple-eyebrow">每一步，都可以慢下来。</p>
+            <h2 id="learning-title">一条指令。<br />五次恍然大悟。</h2>
+            <p>取指、译码、读寄存器、执行、写回。<br />用播放与单步控制，把每个阶段拆开看懂。</p>
+            <Link className="apple-inline-link" to="/lab?module=instruction">运行你的第一条 ADD <ChevronRight size={17} /></Link>
+          </div>
+          <div className="apple-learning-diagram" aria-label="ADD 指令的五个教学阶段">
+            <code>ADD R1, R2, R3</code>
+            <ol>
+              {['取指', '译码', '读寄存器', '执行', '写回'].map((stage, index) => <li key={stage}><span>{index + 1}</span><strong>{stage}</strong>{index < 4 && <ChevronRight size={16} />}</li>)}
+            </ol>
+            <div className="apple-learning-result"><span>R2 = 5</span><span>R3 = 7</span><strong>R1 = 12</strong></div>
+          </div>
         </div>
       </section>
-      <section className="learning-note container"><Layers3 size={24} /><div><h3>不止看模型，更要看懂过程。</h3><p>选择一个组件，观察一次数据流，用播放与单步控制把每个执行阶段拆开理解。</p></div><Link to="/lab?module=instruction">运行你的第一条 ADD <ArrowRight size={16} /></Link></section>
+
+      <section className="apple-roadmap" aria-labelledby="roadmap-title">
+        <div className="apple-section-copy">
+          <p className="apple-eyebrow">课程路线</p>
+          <h2 id="roadmap-title">接下来，继续深入。</h2>
+          <p>10 个课程模块，3 个已开放。<br className="apple-mobile-break" />以下 7 个模块将在后续阶段提供。</p>
+        </div>
+        <div className="apple-roadmap-list">
+          {plannedCourses.map((module, index) => <article className="apple-roadmap-row" key={module.id}>
+            <span className="apple-roadmap-number">{String(index + 4).padStart(2, '0')}</span>
+            <div><h3>{module.subtitle}</h3><p>{module.title}</p></div>
+            <span className="apple-roadmap-status">规划中</span>
+          </article>)}
+        </div>
+      </section>
     </main>
-    <footer className="home-footer container"><span>ARCHITECTURE VISUAL LAB</span><span>计算机组成原理 · 第一阶段</span><span>在浏览器中探索，无需后端</span></footer>
+
+    <footer className="apple-footer">
+      <div className="apple-footer-inner"><p>Computer Architecture Visual Lab</p><span>计算机组成原理 · 第一阶段</span><Link to="/lab">打开实验室 <ChevronRight size={12} /></Link></div>
+    </footer>
   </div>;
 }

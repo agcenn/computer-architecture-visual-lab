@@ -1,17 +1,21 @@
 # 第一阶段验证记录
 
-验证日期：2026-10-09。
+验证日期：2026-10-10。
 
-- 依赖安装成功，并生成 `package-lock.json`；项目使用公开 npm registry。
-- `npm run build` 成功：TypeScript 检查、Vite 生产构建及 Pages 路径检查均通过。
-- `dist/` 共生成 11 个文件；23 处生产资源引用验证通过，基础路径为 `/computer-architecture-visual-lab/`。
-- `npm test`：7 项通过，0 项失败。覆盖五阶段状态、写回时机、回退与重播、源/目标寄存器重叠、输入验证，以及 32 位补码运算和标志位。
-- 浏览器生产预览：3D 模型正常显示，点击 ALU 自动聚焦并显示 Inspector；内部运算可显示二进制与标志位。
-- ADD 自动播放完成后 `R1 = 12`、PC = `0x00400004`；Previous 恢复写回前 `R1 = 0`；Reset 回到实验起点。
-- 验证了播放速度选择、Pause 停止推进、修改操作数和非法指令提示。
-- 首页与 Lab 往返、Concept / Visualization / Experiment 切换的最终构建未再出现标签清理错误。
-- `#/lab` 刷新后正常加载；390px 手机宽度下页面无横向溢出。
+页面采用浅色背景、清晰的大标题、蓝色圆角按钮，以及银色底板与石墨灰模块的 3D 场景。首页、实验室与模型控件使用统一的视觉语言。
 
-Vite 对 Three.js 引擎包给出大于 500 kB 的体积提示；构建成功，应用和场景已经按页面/模块拆分加载。
+- `npm run build` 成功：TypeScript、Vite 生产构建及 GitHub Pages 路径检查通过。
+- `dist/` 生成 12 个文件；23 处生产资源引用通过检查，base 为 `/computer-architecture-visual-lab/`。
+- `npm test`：7 项通过，覆盖写回时机、回退与重播、源/目标寄存器重叠、输入验证和 32 位运算。
+- 独立浏览器生产预览验证：3D 正常渲染，ALU 选择和 Inspector 正常；未发生运行时错误或资源请求失败。
+- 单步执行 ADD 后 `R1 = 12`；上一步恢复 `R1 = 0`；重置回到初始状态。
+- 实验页修改 `R2 = 9` 后，2× 自动播放得到 `R1 = 16`；非法 SUB 指令显示输入提示。
+- 首页和实验室往返、教学标签切换、HashRouter 页面刷新正常。
+- 1366px、1024px、768px、390px 宽度检查无横向溢出。
+- 首页保留 3 个已开放课程；其余 7 个课程明确标记为规划中。
 
-当前完成第一阶段。其余独立实验在首页标记为下一阶段。远程 GitHub 仓库未创建或推送，线上部署状态尚未验证；首次发布请按 README 操作。
+GitHub Pages 已启用，发布源为 GitHub Actions。推送到 main 后，部署工作流会安装依赖、运行现有测试、构建并发布 dist。
+
+正式网址：https://agcenn.github.io/computer-architecture-visual-lab/
+
+Three.js 引擎包的体积提示仍存在；生产构建成功，页面与场景分块加载。
