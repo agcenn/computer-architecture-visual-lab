@@ -7,6 +7,7 @@ export type ComponentId =
   | 'alu'
   | 'mux'
   | 'dataMemory'
+  | 'writeBack'
   | 'cache'
   | 'bus'
 

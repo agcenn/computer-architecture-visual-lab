@@ -12,7 +12,7 @@ export const executionStages: ExecutionStage[] = [
     label: 'Fetch',
     title: '取指 · 找到下一条指令',
     description: 'PC 保存当前指令的地址。CPU 使用这个地址访问指令存储器，再把读取的指令送入指令寄存器。',
-    activeComponents: ['pc', 'instructionMemory', 'instructionRegister', 'bus'],
+    activeComponents: ['pc', 'instructionMemory', 'instructionRegister'],
     flows: [
       { from: 'pc', to: 'instructionMemory', type: 'address', label: '0x00400000' },
       { from: 'instructionMemory', to: 'instructionRegister', type: 'memory', label: 'ADD' },
@@ -22,10 +22,10 @@ export const executionStages: ExecutionStage[] = [
     id: 'decode',
     label: 'Decode',
     title: '译码 · 读懂指令的含义',
-    description: '控制单元识别 ADD 操作，并分离源寄存器与目标寄存器编号，生成接下来需要的控制信号。',
-    activeComponents: ['instructionRegister', 'controlUnit', 'registerFile', 'bus'],
+    description: 'Control Unit 中的 Decoder 识别 ADD。指令字段给出源寄存器与目标寄存器编号，控制单元为同一周期的数据通路生成控制信号。',
+    activeComponents: ['instructionRegister', 'controlUnit', 'registerFile'],
     flows: [
-      { from: 'instructionRegister', to: 'controlUnit', type: 'control', label: 'Opcode: ADD' },
+      { from: 'instructionRegister', to: 'controlUnit', type: 'data', label: 'Opcode: ADD' },
       { from: 'instructionRegister', to: 'registerFile', type: 'address', label: 'rs1 / rs2 / rd' },
     ],
   },
@@ -34,11 +34,12 @@ export const executionStages: ExecutionStage[] = [
     label: 'Register Read',
     title: '读寄存器 · 准备两个操作数',
     description: '寄存器堆同时读取两个源寄存器。MUX 选择寄存器数据作为 ALU 的输入，操作数沿数据通路送入 ALU。',
-    activeComponents: ['registerFile', 'mux', 'alu', 'bus'],
+    activeComponents: ['controlUnit', 'registerFile', 'mux', 'alu'],
     flows: [
       { from: 'registerFile', to: 'alu', type: 'data', label: 'Operand A' },
       { from: 'registerFile', to: 'mux', type: 'data', label: 'Operand B' },
       { from: 'mux', to: 'alu', type: 'data', label: 'Operand B' },
+      { from: 'controlUnit', to: 'mux', type: 'control', label: 'ALUSrc = 0' },
     ],
   },
   {
@@ -47,15 +48,20 @@ export const executionStages: ExecutionStage[] = [
     title: '执行 · ALU 完成加法',
     description: '控制单元让 ALU 执行加法。两个 32 位操作数相加，结果先留在 ALU 输出端，此时目标寄存器尚未改变。',
     activeComponents: ['controlUnit', 'alu'],
-    flows: [{ from: 'controlUnit', to: 'alu', type: 'control', label: 'ALUOp: ADD' }],
+    flows: [{ from: 'controlUnit', to: 'alu', type: 'control', label: 'ALUOp = ADD' }],
   },
   {
     id: 'write-back',
     label: 'Write Back',
     title: '写回 · 保存运算结果',
-    description: 'ALU 的结果沿写回通路存入目标寄存器。这条 ADD 指令无需读取数据存储器或 Cache。',
-    activeComponents: ['alu', 'registerFile', 'bus'],
-    flows: [{ from: 'alu', to: 'registerFile', type: 'data', label: 'Result → rd' }],
+    description: 'MemtoReg = 0 让 Write Back 选择 ALU 结果。RegWrite = 1 允许在周期结束的时钟边沿写入目标寄存器；ADD 不访问数据存储器。',
+    activeComponents: ['controlUnit', 'alu', 'writeBack', 'registerFile'],
+    flows: [
+      { from: 'alu', to: 'writeBack', type: 'data', label: 'ALU Result' },
+      { from: 'writeBack', to: 'registerFile', type: 'data', label: 'Result → rd' },
+      { from: 'controlUnit', to: 'writeBack', type: 'control', label: 'MemtoReg = 0' },
+      { from: 'controlUnit', to: 'registerFile', type: 'control', label: 'RegWrite = 1' },
+    ],
   },
 ]
 
@@ -102,8 +108,8 @@ export function getStepDetails(state: CPUExecutionContext): StepDetails {
       stage: null,
       id: 'idle',
       label: 'Ready',
-      title: '一条指令，五个步骤',
-      description: '运行 ADD 指令，观察地址、控制信号和数据如何在 CPU 内流动。点击任意模块查看它的作用。',
+      title: '一个周期，五个观察步骤',
+      description: '运行 ADD，拆解同一单周期中的取指、译码、读寄存器、运算和写回。步骤用于观察信号传播，并非五个时钟周期或五级流水线。点击模块查看说明。',
       activeComponents: [],
       flows: [],
       lines: [instructionLabel, `R${instruction.rs1} = ${operandA} · R${instruction.rs2} = ${operandB}`],
@@ -124,12 +130,14 @@ export function getStepDetails(state: CPUExecutionContext): StepDetails {
     if (stage.id === 'decode' && flow.to === 'registerFile') {
       label = `R${instruction.rs1}, R${instruction.rs2} → R${instruction.rd}`
     }
-    if (stage.id === 'register-read') {
+    if (stage.id === 'register-read' && flow.type === 'data') {
       label = flow.to === 'alu' && flow.from === 'registerFile'
         ? `R${instruction.rs1} = ${operandA}`
         : `R${instruction.rs2} = ${operandB}`
     }
-    if (stage.id === 'write-back') label = `${result} → R${instruction.rd}`
+    if (stage.id === 'write-back' && flow.type === 'data') {
+      label = flow.to === 'writeBack' ? `ALU Result = ${result}` : `${result} → R${instruction.rd}`
+    }
     return { ...flow, label }
   })
 

@@ -28,15 +28,15 @@ export const componentInfo: Record<ComponentId, ComponentInfo> = {
   },
   instructionRegister: {
     name: '指令寄存器', englishName: 'Instruction Register', shortLabel: 'IR', color: '#8398E6',
-    description: '暂存取出的指令，让译码和执行期间的指令保持稳定。',
+    description: '展示从指令存储器取出的指令及其字段，便于观察译码输入。',
     inputs: ['Instruction'], outputs: ['Opcode', 'rs1 / rs2 / rd'],
-    detail: 'ADD R1, R2, R3 表示把 R2 与 R3 相加后写入 R1。IR 保存这条指令，供控制单元识别各字段。',
+    detail: 'ADD R1, R2, R3 表示把 R2 与 R3 相加后写入 R1。IR 是本教学图中的指令观察点；标准单周期数据通路通常直接把指令存储器输出送入译码器，不需要额外的 IR 时钟阶段。',
   },
   controlUnit: {
-    name: '控制单元', englishName: 'Control Unit', shortLabel: 'CONTROL', color: '#A78BFA',
-    description: '译码指令，控制各个模块在正确的时间完成正确的操作。',
-    inputs: ['Opcode', '指令字段'], outputs: ['ALUOp', 'ALUSrc', 'RegWrite'],
-    detail: '对于 ADD，ALUOp 选择加法，ALUSrc 选择寄存器操作数，RegWrite 在写回阶段允许写入。数据存储器读取与写入均不启用。',
+    name: '控制单元与译码器', englishName: 'Control Unit / Decoder', shortLabel: 'CONTROL', color: '#A78BFA',
+    description: '包含指令译码器，根据指令生成数据通路所需的控制信号。',
+    inputs: ['Opcode', '指令字段'], outputs: ['ALUOp', 'ALUSrc', 'MemRead / MemWrite', 'MemtoReg', 'RegWrite'],
+    detail: 'ADD 的控制信号为 ALUSrc = 0（寄存器操作数）、ALUOp = ADD、MemtoReg = 0（ALU 结果）、RegWrite = 1；MemRead = 0、MemWrite = 0。信号在同一周期中驱动组合数据通路，目标寄存器在周期结束的时钟边沿更新。五个演示步骤只是这一周期的教学拆解。',
   },
   registerFile: {
     name: '寄存器堆', englishName: 'Register File', shortLabel: 'REGISTERS', color: '#6AA3FF',
@@ -61,6 +61,12 @@ export const componentInfo: Record<ComponentId, ComponentInfo> = {
     description: '保存程序数据，根据地址执行读取或写入。',
     inputs: ['Address', 'Write Data', 'MemRead / MemWrite'], outputs: ['Read Data'],
     detail: 'LOAD 与 STORE 指令会使用数据存储器。ADD 在两个寄存器之间完成运算，因此本次执行中该模块不参与。独立存储器实验将在后续阶段提供。',
+  },
+  writeBack: {
+    name: '写回结果选择', englishName: 'Write Back', shortLabel: 'WRITE BACK', color: '#D9A73D',
+    description: '通过 MemtoReg 选择 ALU 结果或存储器读出数据，再送回寄存器堆。',
+    inputs: ['ALU Result', 'Memory Read Data', 'MemtoReg'], outputs: ['Write Data → Register File'],
+    detail: '这个外壳表示写回选择器（结果 MUX），不是额外的存储寄存器。ADD 使用 MemtoReg = 0 选择 ALU 结果，默认示例为 12，结果随操作数变化；LOAD 会选择存储器读出数据。RegWrite = 1 时，寄存器堆在周期结束的时钟边沿把选中的结果写入 rd。',
   },
   cache: {
     name: '高速缓存', englishName: 'Cache', shortLabel: 'CACHE', color: '#53C6CF',

@@ -129,3 +129,30 @@ test('invalid register input does not silently truncate, mutate state or remain 
   assert.equal(store.getState().error, null)
   assert.equal(store.getState().registers[2], -4)
 })
+
+test('ADD follows the register and ALU write-back path without a data memory access', () => {
+  const store = createCPUStore()
+  store.getState().run()
+  for (let step = 0; step <= 4; step += 1) {
+    const details = getStepDetails(store.getState())
+    assert.equal(details.activeComponents.includes('dataMemory'), false)
+    assert.equal(details.flows.some((flow) => flow.from === 'dataMemory' || flow.to === 'dataMemory'), false)
+    if (step === 1) {
+      assert.equal(details.flows.find((flow) => flow.from === 'instructionRegister' && flow.to === 'controlUnit')?.type, 'data')
+      assert.equal(details.flows.find((flow) => flow.from === 'instructionRegister' && flow.to === 'controlUnit')?.label, 'Opcode: ADD')
+    }
+    if (step === 2) {
+      assert.equal(details.flows.find((flow) => flow.from === 'controlUnit' && flow.to === 'mux')?.label, 'ALUSrc = 0')
+      assert.equal(details.flows.find((flow) => flow.from === 'registerFile' && flow.to === 'alu')?.label, 'R2 = 5')
+      assert.equal(details.flows.find((flow) => flow.from === 'mux' && flow.to === 'alu')?.label, 'R3 = 7')
+    }
+    if (step === 4) {
+      assert.equal(details.flows.find((flow) => flow.from === 'alu' && flow.to === 'writeBack')?.label, 'ALU Result = 12')
+      assert.equal(details.flows.find((flow) => flow.from === 'writeBack' && flow.to === 'registerFile')?.label, '12 → R1')
+      assert.equal(details.flows.find((flow) => flow.from === 'controlUnit' && flow.to === 'writeBack')?.label, 'MemtoReg = 0')
+      assert.equal(details.flows.find((flow) => flow.from === 'controlUnit' && flow.to === 'registerFile')?.label, 'RegWrite = 1')
+      assert.equal(details.flows.some((flow) => flow.from === 'alu' && flow.to === 'registerFile'), false)
+    }
+    store.getState().next()
+  }
+})
