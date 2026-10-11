@@ -5,7 +5,7 @@ import { ExtrudeGeometry, OrthographicCamera, Quaternion, Shape, Vector3, type C
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useCPUStore } from '../../store/cpuStore';
 import { componentInfo } from '../../data/modules';
-import { getStepDetails, PROGRAM_START_ADDRESS } from '../../data/instructions';
+import { formatHex, formatInstruction, getStepDetails } from '../../data/instructions';
 import { DATAPATH_MODULES, DATAPATH_ROUTES, getDatapathRoute, type DatapathModule, type DatapathPoint, type DatapathRoute } from '../../data/datapath';
 import type { ComponentId, DataFlowSpec } from '../../types/cpu';
 import './CPUScene.css';
@@ -120,11 +120,11 @@ function Module({ module, active, hovered, onHover, labels }: { module: Datapath
   const labelPoint = useMemo(() => new Vector3(module.position[0], .8, module.position[2]), [module]);
   useFrame(({ camera, size }) => projectLabel(labels.current[`module-${module.id}`], labelPoint, camera, size));
   const click = (event: ThreeEvent<MouseEvent>) => { event.stopPropagation(); select(chosen ? null : module.id); };
-  const edgeColor = chosen ? '#0071e3' : over ? '#3b91eb' : active ? '#7197bc' : '#9ba9b8';
+  const edgeColor = chosen ? '#0071e3' : over ? '#3b91eb' : active ? '#418ce1' : '#9ba9b8';
   return <group position={module.position} onClick={click}
     onPointerOver={event => { event.stopPropagation(); onHover(module.id); }} onPointerOut={() => onHover(null)}>
     <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, .07, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color={chosen ? '#d8eaff' : over ? '#e4f1ff' : '#fcfdff'} metalness={.06} roughness={.62}
+      <meshStandardMaterial color={chosen ? '#d8eaff' : over ? '#e4f1ff' : active ? '#eef5ff' : '#fcfdff'} metalness={.06} roughness={.62}
         transparent={muted} opacity={muted ? .24 : 1} depthWrite={!muted} emissive={chosen || over ? '#88baf3' : '#ffffff'} emissiveIntensity={chosen || over ? .12 : .015} />
     </mesh>
     <Line points={[...outline, outline[0]].map(([x, z]) => [x, .67, z] as DatapathPoint)} color={edgeColor} lineWidth={chosen || over ? 2.3 : 1.1} transparent opacity={muted ? .2 : 1} />
@@ -203,7 +203,7 @@ function Processor({ compact, resetKey, topView, hovered, onHover, labels }: { c
     </mesh>
     <Wires />
     {DATAPATH_MODULES.map(module => <Module key={module.id} module={module} active={details.activeComponents.includes(module.id)} hovered={hovered} onHover={onHover} labels={labels} />)}
-    {!compact && details.flows.map((flow, index) => <DataFlow key={`${state.step}-${flow.from}-${flow.to}`} flow={flow} index={index} playing={state.playing} speed={state.speed} labels={labels} labelKey={`flow-${state.step}-${index}`} />)}
+    {!compact && details.flows.map((flow, index) => <DataFlow key={`${state.executionRevision}-${flow.from}-${flow.to}-${flow.type}`} flow={flow} index={index} playing={state.playing} speed={state.speed} labels={labels} labelKey={`flow-${state.executionRevision}-${index}`} />)}
     <CameraRig selected={state.selectedComponent} resetKey={resetKey} topView={topView} />
   </>;
 }
@@ -222,7 +222,17 @@ function SceneFallback() {
 function SceneLabels({ compact, hovered, onHover, labels }: { compact: boolean; hovered: ComponentId | null; onHover: (id: ComponentId | null) => void; labels: LabelRegistry }) {
   const state = useCPUStore();
   const details = getStepDetails(state);
-  const pc = `0x${(PROGRAM_START_ADDRESS + (state.step === 4 ? 4 : 0)).toString(16).padStart(8, '0').toUpperCase()}`;
+  const instruction = state.currentInstruction;
+  const aluExpression = state.aluResult === null ? null : details.operation === 'PASS'
+    ? `${state.operandA} → ${state.aluResult}`
+    : `${state.operandA} ${details.operation === 'SUB' ? '−' : '+'} ${state.operandB} = ${state.aluResult}`;
+  const memoryAccess = instruction?.opcode === 'LOAD' || instruction?.opcode === 'STORE';
+  const memoryCaption = state.memoryData !== null && memoryAccess
+    ? `${formatHex(instruction.address)} ${instruction.opcode === 'LOAD' ? '→' : '←'} ${state.memoryData}`
+    : memoryAccess && state.aluResult !== null ? `${formatHex(state.aluResult)} · 待访存`
+    : memoryAccess ? `${instruction.opcode} · 地址待计算`
+    : instruction ? `${instruction.opcode} · 无访存` : 'LOAD / STORE';
+  const writeBackValue = instruction?.opcode === 'LOAD' ? state.memoryData : state.aluResult;
   return <div className="cpu-scene-label-layer">
     {DATAPATH_MODULES.map(module => {
       const chosen = state.selectedComponent === module.id;
@@ -232,17 +242,19 @@ function SceneLabels({ compact, hovered, onHover, labels }: { compact: boolean; 
           onPointerDown={event => event.stopPropagation()} onPointerEnter={() => onHover(module.id)} onPointerLeave={() => onHover(null)}
           onFocus={() => onHover(module.id)} onBlur={() => onHover(null)}
           onClick={event => { event.stopPropagation(); state.selectComponent(chosen ? null : module.id); }}
-          className={`chip-label ${chosen ? 'is-selected' : ''} ${muted ? 'is-muted' : ''} ${hovered === module.id ? 'is-hovered' : ''} ${compact ? 'is-compact' : ''}`}>
+          className={`chip-label ${chosen ? 'is-selected' : ''} ${muted ? 'is-muted' : ''} ${hovered === module.id ? 'is-hovered' : ''} ${details.activeComponents.includes(module.id) && !compact ? 'is-active' : ''} ${compact ? 'is-compact' : ''}`}>
           <span className="chip-label-name">{module.title}</span><span className="chip-label-short">{componentInfo[module.id].shortLabel}</span>
           <span className="chip-label-sub">{module.subtitle}</span>
-          {module.id === 'pc' && <span className="chip-label-detail">{pc}</span>}
-          {module.id === 'alu' && state.step === 3 && <span className="chip-label-detail">{details.operandA} + {details.operandB} = {details.result}</span>}
-          {module.id === 'dataMemory' && <span className="chip-label-detail">{state.step >= 0 ? 'ADD 不读写' : 'LOAD / STORE'}</span>}
+          {module.id === 'pc' && <span className="chip-label-detail" data-pc={state.pc}>{formatHex(state.pc)}</span>}
+          {module.id === 'instructionRegister' && instruction && <span className="chip-label-detail chip-label-instruction" title={formatInstruction(instruction)}>{formatInstruction(instruction)}</span>}
+          {module.id === 'alu' && aluExpression !== null && <span className="chip-label-detail" data-alu-result={state.aluResult}>{aluExpression}</span>}
+          {module.id === 'dataMemory' && <span className="chip-label-detail" data-memory-value={state.memoryData ?? ''}>{memoryCaption}</span>}
+          {module.id === 'writeBack' && !compact && writeBackValue !== null && instruction?.opcode !== 'STORE' && <span className="chip-label-detail">{details.id === 'write-back' ? '已写回' : '输出待写回'} · {writeBackValue}</span>}
           {details.activeComponents.includes(module.id) && !compact && <i />}
         </button>
       </div>;
     })}
-    {!compact && details.flows.map((flow, index) => <div key={`${state.step}-${index}`} ref={element => { labels.current[`flow-${state.step}-${index}`] = element; }} className="cpu-scene-project-label cpu-scene-flow-label" data-signal-type={flow.type}>
+    {!compact && details.flows.map((flow, index) => <div key={`${state.executionRevision}-${index}`} ref={element => { const key = `flow-${state.executionRevision}-${index}`; if (element) labels.current[key] = element; else delete labels.current[key]; }} className="cpu-scene-project-label cpu-scene-flow-label" data-signal-type={flow.type} data-from={flow.from} data-to={flow.to}>
       <span className="signal-value" style={{ '--signal': flowColors[flow.type], '--signal-ink': flowInk[flow.type] } as CSSProperties}>{flow.label}</span>
     </div>)}
   </div>;

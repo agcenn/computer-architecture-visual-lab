@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { DATAPATH_MODULES, DATAPATH_ROUTES, getDatapathRoute, type DatapathPoint } from '../src/data/datapath'
-import { executionStages } from '../src/data/instructions'
+import { executionStages, getStepDetails } from '../src/data/instructions'
+import { createCPUStore } from '../src/store/cpuStore'
 import type { ComponentId, DataFlowSpec } from '../src/types/cpu'
 
 const key = (flow: Pick<DataFlowSpec, 'from' | 'to' | 'type'>) => `${flow.from}:${flow.to}:${flow.type}`
@@ -12,6 +13,32 @@ test('all execution signals have one permanent route with the same signal classi
   assert.equal(new Set(routeKeys).size, routeKeys.length, 'Ambiguous route selection')
   for (const stage of executionStages) {
     for (const flow of stage.flows) assert.ok(getDatapathRoute(flow), `${stage.id}: missing ${key(flow)}`)
+  }
+})
+
+test('all five instructions animate existing routes in every execution phase', () => {
+  for (const text of ['ADD R1,R2,R3', 'SUB R1,R2,R3', 'LOAD R1,[0x1000]', 'STORE R1,[0x1000]', 'MOV R1,R2']) {
+    const store = createCPUStore()
+    store.getState().setInstructionText(text)
+    for (const stage of executionStages) {
+      store.getState().next()
+      const details = getStepDetails(store.getState())
+      assert.equal(details.id, stage.id, `${text}: phase transition`)
+      for (const flow of details.flows) {
+        assert.ok(getDatapathRoute(flow), `${text} / ${stage.id}: missing ${key(flow)}`)
+        assert.ok(flow.label.trim(), `${text} / ${stage.id}: missing signal value`)
+      }
+      if (stage.id === 'execute' && /^(ADD|SUB|MOV)/.test(text)) {
+        assert.ok(details.flows.some(flow => flow.from === 'alu' && flow.to === 'writeBack' && flow.type === 'data'), `${text}: show the ALU result on its output wire before writeback`)
+      }
+      if (stage.id === 'memory' && text.startsWith('LOAD')) {
+        assert.ok(details.flows.some(flow => flow.from === 'dataMemory' && flow.to === 'writeBack' && flow.type === 'memory'))
+      }
+      if (stage.id === 'memory' && text.startsWith('STORE')) {
+        assert.ok(details.flows.some(flow => flow.from === 'registerFile' && flow.to === 'dataMemory' && flow.type === 'data'))
+        assert.equal(details.flows.some(flow => flow.to === 'writeBack'), false, 'STORE does not write a result register')
+      }
+    }
   }
 })
 

@@ -23,6 +23,8 @@
 .chip-label-short { display: none; font-size: 10px; font-weight: 650; line-height: 1.2; }
 .chip-label-sub { color: #69798c; font-size: 9px; line-height: 1.2; white-space: nowrap; }
 .chip-label-detail { color: #596d83; font-size: 8.5px; line-height: 1.25; white-space: nowrap; font-family: 'SFMono-Regular', Consolas, monospace; }
+.chip-label-instruction { max-width: 122px; overflow: hidden; text-overflow: ellipsis; }
+.chip-label.is-active { border-color: #bed5ed; background: #f7fbffeb; }
 .chip-label.is-selected, .chip-label.is-hovered, .chip-label:hover { border-color: #73a9e0; background: #fffffff5; }
 .chip-label.is-selected .chip-label-name, .chip-label.is-selected .chip-label-short { color: #0071e3; }
 .chip-label.is-muted { opacity: .28; }

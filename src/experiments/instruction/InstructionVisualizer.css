@@ -1,0 +1,109 @@
+.instruction-examples { display: flex; align-items: center; gap: 6px; margin: 11px 3px 0; flex-wrap: wrap; }
+.instruction-examples > span { color: var(--muted); font-size: 10px; margin-right: 3px; }
+.instruction-examples button { font-size: 10px; font-weight: 600; letter-spacing: .2px; padding: 5px 12px; border-radius: 999px; background: #e9e9ee; color: #5c5c63; }
+.instruction-examples button:hover { background: #dceafb; color: #0066cc; }
+.instruction-examples button.active { color: #0066cc; background: #e5f0fc; }
+.simulator-inputs { flex-wrap: wrap; padding: 13px 15px; gap: 12px; }
+.simulator-inputs > div { flex: 1 1 220px; }
+.simulator-inputs .memory-editor { flex-wrap: wrap; font-size: 11px; }
+.simulator-inputs label { white-space: nowrap; }
+
+.simulator-inspector { padding-top: 22px; gap: 0; }
+.simulator-inspector .inspector-heading { padding-bottom: 14px; margin-bottom: 17px; }
+.live-stage { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.live-stage .component-type { font-size: 9px; letter-spacing: .5px; }
+.live-stage > strong { font-size: 10px; color: #0066cc; letter-spacing: .3px; text-align: right; }
+.simulator-inspector .current-instruction { margin-top: 13px; padding: 12px; border-radius: 12px; }
+.simulator-inspector .current-instruction > span { font-size: 8px; }
+.simulator-inspector .current-instruction code { font-size: 12px; margin-top: 7px; overflow-wrap: anywhere; }
+.simulator-inspector .pc-state { font-size: 11px; margin-top: 13px; }
+.simulator-inspector .pc-state code { font-size: 11px; }
+.alu-execution { margin-top: 16px; padding: 12px; background: #f7f7f9; border: 1px solid #e5e5e9; border-radius: 14px; }
+.alu-execution.executing { background: #fff9eb; border-color: #e8c56c; box-shadow: 0 0 0 3px #e8c56c13; }
+.alu-card-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.alu-card-heading > span:first-child { font-size: 12px; font-weight: 600; color: #1d1d1f; }
+.alu-card-heading > span:last-child { font-size: 8px; letter-spacing: .5px; color: var(--muted); }
+.alu-input { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 0; color: var(--muted); font-size: 11px; }
+.alu-input code { color: #1d1d1f; font-size: 11px; overflow-wrap: anywhere; text-align: right; }
+.alu-input strong { font-size: 11px; font-weight: 600; color: #1d1d1f; }
+.alu-result { margin-top: 6px; padding-top: 9px; border-top: 1px solid #e5e5e9; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.alu-result > span { font-size: 11px; color: var(--muted); }
+.alu-result > strong { font-size: 24px; line-height: 1.25; color: #a85b00; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.alu-result.is-address > strong { font-family: var(--font-mono, monospace); font-size: 16px; white-space: nowrap; flex-shrink: 0; }
+.memory-operation { margin-top: 12px; display: flex; gap: 9px; align-items: baseline; padding: 9px 0; }
+.memory-operation > span { font-size: 8px; color: var(--muted); letter-spacing: .4px; }
+.memory-operation p { font-size: 10px; color: var(--muted); line-height: 1.7; }
+.memory-operation.active p { color: #187245; font-weight: 600; }
+.control-signals { margin-top: 9px; }
+.control-signals .register-heading { margin-bottom: 9px; }
+.control-signals h3 { font-size: 11px; }
+.signal-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+.signal-cell { background: #f5f5f7; padding: 7px 7px 6px; border-radius: 9px; min-width: 0; }
+.signal-cell > span { display: block; font-size: 9px; color: var(--muted); }
+.signal-cell code { display: block; color: #585862; font-size: 12px; margin-top: 2px; }
+.signal-cell.enabled { background: #f1ecfa; }
+.signal-cell.enabled code { color: #7351b5; font-weight: 600; }
+.simulator-inspector .register-section { margin-top: 22px; padding-top: 17px; }
+.simulator-inspector .register-heading { margin-bottom: 10px; }
+.simulator-inspector .register-row { padding: 6px 5px; font-size: 11px; }
+.simulator-inspector .register-row strong { font-size: 12px; }
+.simulator-inspector .register-row code { font-size: 9px; min-width: 80px; }
+.simulator-inspector .register-legend { font-size: 9px; line-height: 1.6; margin-top: 10px; }
+.memory-section { margin-top: 22px; padding-top: 17px; border-top: 1px solid #e5e5ea; }
+.memory-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 7px; border-radius: 7px; border-bottom: 1px solid #eeeef1; }
+.memory-row code { font-size: 10px; color: var(--muted); }
+.memory-row strong { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.memory-row.written { background: #e7f4eb; border-color: transparent; }
+.memory-row.written code, .memory-row.written strong { color: #187245; }
+.memory-row.reading { background: #edf7f0; border-color: transparent; }
+.memory-row.reading code, .memory-row.reading strong { color: #187245; }
+.memory-note { color: var(--muted); font-size: 9px; margin-top: 9px; line-height: 1.6; }
+.simulator-inspector .selected-component { margin-top: 22px; padding-top: 17px; border-top: 1px solid #e5e5ea; }
+.simulator-inspector .selected-component h2 { font-size: 21px; margin-top: 6px; }
+.simulator-inspector .selected-component .component-english { margin-top: 4px; font-size: 11px; }
+.simulator-inspector .selected-component .inspector-description { font-size: 12px; margin-top: 10px; }
+.component-ports { margin-top: 12px; }
+.component-ports summary { cursor: pointer; color: #0066cc; font-size: 11px; padding: 6px 0; }
+.component-ports .io-section { margin-top: 15px; }
+.simulator-inspector .inspector-tip { margin-top: 20px; padding-top: 17px; }
+.simulator-inspector .inspector-tip p { font-size: 11px; }
+.simulator-inspector .quick-components { margin-top: 10px; }
+.simulator-timeline .timeline-stages { max-width: 1200px; }
+.simulator-timeline .timeline-stage { gap: 7px; }
+.simulator-timeline .timeline-stage strong { font-size: 10px; }
+.simulator-timeline .timeline-stage small { font-size: 9px; }
+
+@media (max-width: 1050px) {
+  .simulator-inspector { grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; }
+  .simulator-inspector .live-execution { grid-column: 1; grid-row: 2 / 4; }
+  .simulator-inspector .live-registers { grid-column: 2; grid-row: 2; margin-top: 0; padding-top: 0; }
+  .simulator-inspector .memory-section { grid-column: 2; grid-row: 3; margin-top: 0; }
+  .simulator-inspector .selected-component, .simulator-inspector > .inspector-tip { grid-column: 1 / -1; margin-top: 0; }
+  .simulator-timeline .timeline-stage { padding-left: 4px; gap: 6px; }
+  .simulator-timeline .timeline-stage strong { font-size: 9px; }
+  .simulator-timeline .timeline-stage small { font-size: 8px; }
+}
+@media (max-width: 760px) {
+  .instruction-examples { gap: 5px; }
+  .instruction-examples button { padding: 5px 10px; font-size: 9px; }
+  .instruction-helper { font-size: 9px; gap: 8px; flex-wrap: wrap; }
+  .simulator-inspector .register-row code { font-size: 8px; min-width: 0; }
+  .simulator-inspector .live-stage { flex-wrap: wrap; gap: 4px; }
+  .simulator-inspector .current-instruction code { font-size: 11px; }
+  .simulator-inspector .pc-state { flex-wrap: wrap; gap: 4px; }
+  .signal-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .simulator-timeline .timeline-stage { padding-left: 0; }
+  .simulator-timeline .timeline-stage > div { max-width: 64px; }
+  .simulator-timeline .timeline-stage strong { font-size: 8px; line-height: 1.4; overflow-wrap: normal; }
+  .simulator-timeline .timeline-stage small { display: none; }
+  .alu-result > strong { font-size: 21px; }
+}
+@media (max-width: 420px) {
+  .simulator-inspector { grid-template-columns: minmax(0,1fr); }
+  .simulator-inspector .live-execution, .simulator-inspector .live-registers, .simulator-inspector .memory-section, .simulator-inspector .selected-component, .simulator-inspector > .inspector-tip { grid-column: 1; grid-row: auto; }
+  .simulator-inspector .live-registers { margin-top: 0; padding-top: 17px; border-top: 1px solid #e5e5ea; }
+  .simulator-inspector .register-row code { font-size: 10px; min-width: 90px; }
+  .signal-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .simulator-inspector .live-stage { flex-wrap: nowrap; }
+  .simulator-inspector .pc-state { flex-wrap: nowrap; }
+}

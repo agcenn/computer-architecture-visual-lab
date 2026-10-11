@@ -34,7 +34,8 @@ const route = (id: string, from: ComponentId, to: ComponentId, type: DataFlowSpe
   id, from, to, type, label, points: coordinates.map(([x, z]) => p(x, z)), labelPoint: [labelAt[0], .8, labelAt[1]],
 });
 
-/** Complete teaching topology. ADD highlights only the routes it actually uses. */
+/** Permanent teaching topology. The simulator activates only the signals used
+ * by the current instruction and phase; all remaining routes stay gray. */
 export const DATAPATH_ROUTES: DatapathRoute[] = [
   route('pc-instruction-address', 'pc', 'instructionMemory', 'address', 'PC', [[-11, -4.9], [-11, -3.9]], [-11, -4.4]),
   route('instruction-word', 'instructionMemory', 'instructionRegister', 'memory', 'Instruction', [[-11, -1.5], [-11, -.4]], [-11, -1.0]),
@@ -51,7 +52,7 @@ export const DATAPATH_ROUTES: DatapathRoute[] = [
   route('write-register', 'writeBack', 'registerFile', 'data', 'Write data', [[5.4, 7], [4.2, 7], [4.2, 9.2], [-4.3, 9.2], [-4.3, 2.4]], [-4.3, 5.4]),
   route('control-alusrc', 'controlUnit', 'mux', 'control', 'ALUSrc', [[-9.1, 4.8], [-7.7, 4.8], [-7.7, 6.4], [-2.2, 6.4], [-2.2, 5.5], [-1, 5.5]], [-4.9, 6.4]),
   route('control-aluop', 'controlUnit', 'alu', 'control', 'ALUOp', [[-9.1, 4.1], [-7.2, 4.1], [-7.2, -3.2], [3.2, -3.2], [3.2, -1.2]], [3.2, -2.3]),
-  route('control-memory', 'controlUnit', 'dataMemory', 'control', 'MemRead / MemWrite', [[-11.9, 6.1], [-11.9, 10], [13.5, 10], [13.5, .9], [12.5, .9]], [13.5, 4.2]),
+  route('control-memory', 'controlUnit', 'dataMemory', 'control', 'MemRead / MemWrite', [[-11.9, 6.1], [-11.9, 10], [13.5, 10], [13.5, .9], [12.5, .9]], [9.8, 10]),
   route('control-memto-reg', 'controlUnit', 'writeBack', 'control', 'MemtoReg', [[-10.3, 6.1], [-10.3, 8.5], [3.3, 8.5], [3.3, 10.7], [7.3, 10.7], [7.3, 8.2]], [7.3, 9.45]),
   route('control-regwrite', 'controlUnit', 'registerFile', 'control', 'RegWrite', [[-9.1, 5.6], [-6.9, 5.6], [-6.9, 1.6], [-6.35, 1.6]], [-6.9, 3.5]),
 ];
