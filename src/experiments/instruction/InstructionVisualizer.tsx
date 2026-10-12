@@ -12,17 +12,17 @@ const instructionExamples = [
 ] as const;
 
 /** The clock advances the teaching state; Three.js only renders that state. */
-export function useInstructionPlayback() {
+export function useInstructionPlayback(enabled = true) {
   const playing = useCPUStore(state => state.playing);
   const step = useCPUStore(state => state.step);
   const speed = useCPUStore(state => state.speed);
   const executionRevision = useCPUStore(state => state.executionRevision);
   const next = useCPUStore(state => state.next);
   useEffect(() => {
-    if (!playing) return;
+    if (!enabled || !playing) return;
     const timer = window.setTimeout(next, 1800 / speed);
     return () => window.clearTimeout(timer);
-  }, [playing, step, speed, executionRevision, next]);
+  }, [enabled, playing, step, speed, executionRevision, next]);
 }
 
 export function InstructionInput() {

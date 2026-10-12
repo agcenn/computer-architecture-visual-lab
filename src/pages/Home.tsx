@@ -12,6 +12,7 @@ const courseDescriptions: Record<string, string> = {
   overview: '从整体开始。认识 CPU 中的每个组件，了解它们如何一起工作。',
   datapath: '让数据流动起来。沿着连接，观察地址、数据与控制信号的传递。',
   instruction: '跟随一条 ADD 指令。从取指到写回，亲手走完一次计算。',
+  cache: '理解一次命中。拆分地址，观察缓存查找、主存回填与数据返回。',
 };
 
 function scrollToCourses(event: MouseEvent<HTMLAnchorElement>) {
@@ -20,6 +21,7 @@ function scrollToCourses(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 function CourseIllustration({ moduleId }: { moduleId: string }) {
+  if (moduleId === 'cache') return <div className="apple-course-art apple-cache-art" aria-hidden="true"><div className="apple-cache-cpu">CPU</div><span className="apple-cache-arrow">↓</span><div className="apple-cache-mini"><span>L1 CACHE</span><div><i /><i className="hit" /><i /><i /></div></div><span className="apple-cache-hit">CACHE HIT</span></div>;
   if (moduleId === 'overview') {
     return <div className="apple-course-art apple-overview-art" aria-hidden="true">
       <div className="apple-mini-board">
@@ -43,7 +45,7 @@ function CourseIllustration({ moduleId }: { moduleId: string }) {
   return <div className="apple-course-art apple-instruction-art" aria-hidden="true">
     <div className="apple-add-equation"><span>5</span><span>+</span><span>7</span><span>=</span><strong>12</strong></div>
     <code>ADD R1, R2, R3</code>
-    <div className="apple-instruction-progress"><i /><i /><i /><i /><i /></div>
+    <div className="apple-instruction-progress"><i /><i /><i /><i /><i /><i /></div>
   </div>;
 }
 
@@ -87,7 +89,7 @@ export default function Home() {
         <div className="apple-section-copy">
           <p className="apple-eyebrow">从理解，到亲手验证。</p>
           <h2 id="courses-title">以探索的方式，学习。</h2>
-          <p>三个起点。由你选择。</p>
+          <p>{availableCourses.length} 个起点。由你选择。</p>
         </div>
         <div className="apple-course-grid">
           {availableCourses.map((module, index) => <Link className="apple-course-card" key={module.id} to={`/lab?module=${module.id}`}>
@@ -107,14 +109,14 @@ export default function Home() {
         <div className="apple-learning-inner">
           <div className="apple-learning-copy">
             <p className="apple-eyebrow">每一步，都可以慢下来。</p>
-            <h2 id="learning-title">一条指令。<br />五次恍然大悟。</h2>
-            <p>取指、译码、读寄存器、执行、写回。<br />用播放与单步控制，把每个阶段拆开看懂。</p>
+            <h2 id="learning-title">一条指令。<br />六步看懂执行。</h2>
+            <p>取指、译码、读寄存器、执行、访存、写回。<br />用播放与单步控制，把每个阶段拆开看懂。</p>
             <Link className="apple-inline-link" to="/lab?module=instruction">运行你的第一条 ADD <ChevronRight size={17} /></Link>
           </div>
-          <div className="apple-learning-diagram" aria-label="ADD 指令的五个教学阶段">
+          <div className="apple-learning-diagram" aria-label="ADD 指令的六个教学阶段">
             <code>ADD R1, R2, R3</code>
             <ol>
-              {['取指', '译码', '读寄存器', '执行', '写回'].map((stage, index) => <li key={stage}><span>{index + 1}</span><strong>{stage}</strong>{index < 4 && <ChevronRight size={16} />}</li>)}
+              {['取指', '译码', '读寄存器', '执行', '访存', '写回'].map((stage, index) => <li key={stage}><span>{index + 1}</span><strong>{stage}</strong>{index < 5 && <ChevronRight size={16} />}</li>)}
             </ol>
             <div className="apple-learning-result"><span>R2 = 5</span><span>R3 = 7</span><strong>R1 = 12</strong></div>
           </div>
@@ -125,11 +127,11 @@ export default function Home() {
         <div className="apple-section-copy">
           <p className="apple-eyebrow">课程路线</p>
           <h2 id="roadmap-title">接下来，继续深入。</h2>
-          <p>10 个课程模块，3 个已开放。<br className="apple-mobile-break" />以下 7 个模块将在后续阶段提供。</p>
+          <p>{courseModules.length} 个课程模块，{availableCourses.length} 个已开放。<br className="apple-mobile-break" />以下 {plannedCourses.length} 个模块将在后续阶段提供。</p>
         </div>
         <div className="apple-roadmap-list">
           {plannedCourses.map((module, index) => <article className="apple-roadmap-row" key={module.id}>
-            <span className="apple-roadmap-number">{String(index + 4).padStart(2, '0')}</span>
+            <span className="apple-roadmap-number">{String(index + availableCourses.length + 1).padStart(2, '0')}</span>
             <div><h3>{module.subtitle}</h3><p>{module.title}</p></div>
             <span className="apple-roadmap-status">规划中</span>
           </article>)}

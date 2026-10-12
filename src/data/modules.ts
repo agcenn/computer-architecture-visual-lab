@@ -7,7 +7,7 @@ export const courseModules: CourseModule[] = [
   { id: 'alu', title: 'ALU', subtitle: '算术逻辑单元', available: false },
   { id: 'registers', title: 'Registers', subtitle: '寄存器', available: false },
   { id: 'memory', title: 'Memory Hierarchy', subtitle: '存储层次', available: false },
-  { id: 'cache', title: 'Cache', subtitle: '高速缓存', available: false },
+  { id: 'cache', title: 'Cache Visualizer', subtitle: '高速缓存', available: true },
   { id: 'bus', title: 'Bus', subtitle: '总线', available: false },
   { id: 'pipeline', title: 'Pipeline', subtitle: '流水线', available: false },
   { id: 'virtual-memory', title: 'Virtual Memory', subtitle: '虚拟内存', available: false },
@@ -72,7 +72,7 @@ export const componentInfo: Record<ComponentId, ComponentInfo> = {
     name: '高速缓存', englishName: 'Cache', shortLabel: 'CACHE', color: '#53C6CF',
     description: '保存经常使用的数据副本，减少访问主存的等待时间。',
     inputs: ['Memory Address', 'Read / Write Request'], outputs: ['Cached Data', 'Hit / Miss'],
-    detail: 'Cache 通过有效位、标签与索引判断请求是否命中。当前 ADD 不访问数据 Cache；命中率与地址映射实验将在后续阶段提供。',
+    detail: 'Cache 实验使用 16 位字节地址、4 行直接映射缓存和 4 字节块。地址分为 12 位 Tag、2 位 Index 和 2 位 Offset；Valid 与 Tag 一起决定命中。Miss 从主存回填整块，然后按 Offset 把所需字节返回 CPU。',
   },
   bus: {
     name: '总线与数据通路', englishName: 'Bus & Datapath', shortLabel: 'BUS', color: '#F2B95D',

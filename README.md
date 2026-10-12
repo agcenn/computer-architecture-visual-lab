@@ -2,7 +2,7 @@
 
 计算机组成原理 3D 可视化学习实验室。使用 React、TypeScript、Vite、Three.js、React Three Fiber、Drei、Tailwind CSS 和 Zustand；所有教学运算都在浏览器中完成。
 
-当前包含课程首页、Lab 布局、3D CPU 数据通路、组件选择与相机聚焦、Inspector，以及支持 ADD、SUB、LOAD、STORE、MOV 的 Instruction Execution Visualizer。指令按照 FETCH / DECODE / REGISTER READ / EXECUTE / MEMORY / WRITE BACK 六个观察步骤执行，CPU 状态、模块高亮与线路数据同步更新。ALU、Memory、Cache、Pipeline 等独立实验会在后续阶段扩展；首页会清楚标示可用状态。
+当前包含课程首页、Lab 布局、3D CPU 数据通路、组件选择与相机聚焦、Inspector，以及支持 ADD、SUB、LOAD、STORE、MOV 的 Instruction Execution Visualizer。指令按照 FETCH / DECODE / REGISTER READ / EXECUTE / MEMORY / WRITE BACK 六个观察步骤执行，CPU 状态、模块高亮与线路数据同步更新。Cache Visualizer 提供逐步执行的直接映射缓存实验。ALU、Memory、Pipeline 等独立实验会在后续阶段扩展；首页会清楚标示可用状态。
 
 CPU 场景采用教学型单周期数据通路：左侧纵向排列 Program Counter → Instruction Memory → Instruction Register → Control Unit / Decoder，右侧展示 Register File、ALUSrc MUX、ALU、Data Memory 和 Write Back 结果选择器。线路从模块端口出发并带有方向箭头，默认灰色；当前观察步骤的 DATA、ADDRESS、CONTROL、MEMORY 分别使用黄色、蓝色、紫色和绿色。悬停高亮，点击选择后相机聚焦、其他模块淡化，Inspector 解释输入、输出与组件作用。
 
@@ -23,7 +23,7 @@ npm run build
 npm run preview
 ```
 
-`npm test` 检查五种指令的解析、六阶段执行、完整状态回退、内存写入撤销、连续指令、32 位运算和数据通路覆盖。`npm run build` 先进行 TypeScript 检查，再生成 `dist/`，最后自动验证 Pages 的基础路径、输出文件和资源引用。`npm run preview` 用于检查生产构建，例如 `http://localhost:4173/computer-architecture-visual-lab/`。开发服务器和预览服务器仅用于本地开发，线上网站直接运行 `dist/` 的静态文件。
+`npm test` 检查五种指令的解析、六阶段执行、完整状态回退、内存写入撤销、连续指令、32 位运算和数据通路覆盖；也检查 Cache 地址拆分、命中、整块填充、替换、预设统计与跨访问回退。`npm run build` 先进行 TypeScript 检查，再生成 `dist/`，最后自动验证 Pages 的基础路径、输出文件和资源引用。`npm run preview` 用于检查生产构建，例如 `http://localhost:4173/computer-architecture-visual-lab/`。开发服务器和预览服务器仅用于本地开发，线上网站直接运行 `dist/` 的静态文件。
 
 ## 实验操作
 
@@ -52,6 +52,22 @@ npm run preview
 控制信号在 DECODE 后显示译码结果，并在本条指令的后续观察步骤保持稳定。ADD / SUB 使用 `ALUSrc = 0`，MOV 使用 ALU 的 `PASS` 操作，这三种指令通过 `MemtoReg = 0` 选择 ALU 结果；它们在 MEMORY 明确标示跳过访存，Data Memory 保持灰色。LOAD / STORE 使用 `ALUSrc = 1`，由 ALU 计算 `0 + 绝对地址`；LOAD 使用 `MemRead = 1` 与 `MemtoReg = 1`，STORE 使用 `MemWrite = 1` 与 `RegWrite = 0`。动画只高亮当前观察点对应的控制与数据线路，不把这些观察步骤模拟成独立硬件周期。
 
 单周期传播与周期边界写入的教学依据见 [Berkeley CS61C Datapath](https://notes.cs61c.org/content/datapath/)；ALUSrc、MemtoReg 等控制信号及运算/访存通路见 [FSU Single-Cycle Datapath](https://www.cs.fsu.edu/~jayarama/org2sp19/Slides/Datapath.pdf)。
+
+## Cache 实验
+
+打开 `#/lab?module=cache`，观察 CPU → L1 Cache → Main Memory 的 2.5D 模型。参数固定为 16 位**字节地址**、4 行、每块 4 字节，缓存初始全部无效；读取一个字节时，Miss 会从主存回填整个 4 字节块。
+
+地址拆分为 **Tag 12 位 / Index 2 位 / Offset 2 位**。输入 `0x1234` 显示二进制 `0001 0010 0011 0100`，Tag 为 `0x123`、Index 为 `1`、Offset 为 `0`；对应主存块为 `0x1234`–`0x1237`。输入有效地址时会预览并高亮对应缓存行，实际访问从 CPU 发出地址开始。
+
+按 Next 逐步观察地址发出、地址拆分、Index 选行、Valid 与 Tag 比较。Hit 沿 Cache → CPU 返回所需字节；Miss 沿 CPU 请求主存 → Memory 回填 Cache → Cache 返回 CPU，填充时更新 Valid、Tag 和四个 Data 字节，Offset 选择其中一个。Hit 要同时满足 `Valid = 1` 和标签相等。
+
+“清空并载入预设”从空缓存开始执行 `0x1000 → 0x1004 → 0x1000 → 0x2000 → 0x1004`，结果为 **Miss / Miss / Hit / Miss / Hit**，累计命中率依次为 **0% / 0% / 33.3% / 25% / 40%**。`0x1000` 与 `0x2000` 映射到 Line 0，标签不同，所以访问后者时替换前者；Line 1 的 `0x1004` 仍在缓存中。刚完成 `0x1000` 的访问后，紧接着访问 `0x1001` 可以观察同一块内不同 Offset 的命中；预设结束后再次访问已被替换的 `0x1000` 则会 Miss。
+
+Hit、Miss、Hit Rate 在数据返回 CPU、一次访问完成后更新，避免单步或重播重复计数。Previous 恢复缓存行、统计和 CPU 收到的数据；Reset 清空缓存与本次访问记录。自动播放可以暂停，逐步执行使用同一份状态与动画阶段。
+
+Main Memory 的值是固定的教学示例字节：`((address & 0xFF) * 13 + (address >>> 8) * 17 + 7) & 0xFF`，方便重复实验时核对数据；它与指令实验的 32 位字内存分别建模。此实验只读，展示命中、整块回填、空间局部性和直接映射替换，不模拟真实硬件延迟或写策略。Cache 较小、访问较快，保存近期使用的数据副本，从而减少向较慢主存请求数据的次数。
+
+参考：[Berkeley CS61C Direct-mapped Caches](https://notes.cs61c.org/content/caches-ii/direct-mapped/)、[Cornell CS3410 Caches](https://www.cs.cornell.edu/courses/cs3410/2026sp/notes/caches.html)。
 
 ## GitHub Pages 已配置项
 
@@ -120,6 +136,7 @@ src/components/layout/       导航、Inspector、Timeline
 src/components/three/        3D 场景、模块、数据流和相机
 src/data/                    课程与指令教学数据
 src/experiments/instruction/ 指令实验界面
+src/experiments/cache/       Cache 实验界面与 2.5D 动画
 src/pages/                   Home 与 Lab
 src/store/                   教学状态
 src/types/                   TypeScript 类型
@@ -130,3 +147,5 @@ dist/                        构建结果（build 后生成）
 `src/types/cpu.ts` 定义可按 opcode 扩展的 `Instruction` 联合类型、完整 `CPUState`、带状态快照的 `ExecutionStep` 和 `ControlSignals`。`src/data/instructions.ts` 负责五种指令的解析、32 位运算、六阶段快照生成与当前阶段数据线路；`src/data/datapath.ts` 定义九个教学模块的位置、外壳尺寸与静态线路。
 
 `src/store/cpuStore.ts` 统一保存实际 CPU 状态、执行前快照、历史观察点、播放状态、组件选择和 `executionRevision`。Next / Previous 将相应完整快照应用到当前状态；Reset 恢复执行前快照。3D 场景与 Inspector 读取同一状态，`executionRevision` 让线路动画在切换、回退和重播时重新开始，场景自身不执行 CPU 写入。增加指令时可扩展 `Instruction`、解析与运算规则、阶段信号及测试，沿用快照恢复和播放机制。页面与布局组件继续组织课程入口、教学标签页、Inspector 和 Timeline。
+
+`src/types/cache.ts` 定义地址字段、缓存行、访问快照和阶段类型；`src/data/cache.ts` 提供地址拆分、教学内存与纯函数访问模拟；`src/store/cacheStore.ts` 管理缓存、统计、预设序列与可逆访问历史。`src/experiments/cache/CacheVisualizer.tsx` 从同一状态渲染字段、缓存表、Inspector 和线路动画。Cache 页面按需加载，离开实验会暂停自动播放。
