@@ -13,6 +13,7 @@ import { InstructionInput, OperandEditor, useInstructionPlayback } from '../expe
 
 const CPUScene = lazy(() => import('../components/three/CPUScene'));
 const CacheVisualizer = lazy(() => import('../experiments/cache/CacheVisualizer'));
+const PipelineVisualizer = lazy(() => import('../experiments/pipeline/PipelineVisualizer'));
 type TeachingTab = 'concept' | 'visualization' | 'experiment';
 const concepts: Record<string, { title: string; intro: string; cards: [string, string][] }> = {
   overview: { title: '一台计算机，如何协同工作？', intro: 'CPU 执行指令，存储器保存指令与数据，总线连接各个模块。这个模型把它们拆开，让连接和数据流可见。', cards: [['CPU', '控制单元决定做什么，ALU 完成运算，寄存器保存当前需要的数据。'], ['存储', '指令存储器提供程序；数据存储器保存运算需要的内容。Cache 缩短访存等待。'], ['总线', '地址指出去哪里，数据承载传输内容，控制信号决定何时读写。']] },
@@ -28,10 +29,12 @@ export default function Lab() {
   const [tab, setTab] = useState<TeachingTab>('visualization');
   const state = useCPUStore();
   const details = getStepDetails(state);
-  useInstructionPlayback(moduleId !== 'cache');
-  useEffect(() => { if (moduleId === 'cache') state.pause(); }, [moduleId, state.pause]);
+  const independentModule = moduleId === 'cache' || moduleId === 'pipeline';
+  useInstructionPlayback(!independentModule);
+  useEffect(() => { if (independentModule) state.pause(); }, [independentModule, state.pause]);
   useEffect(() => { document.title = `${module.subtitle} · Architecture Visual Lab`; }, [module.subtitle]);
   if (moduleId === 'cache') return <SceneBoundary><Suspense fallback={<div className="page-loading"><span className="loading-dot" />正在加载 Cache 实验室…</div>}><CacheVisualizer /></Suspense></SceneBoundary>;
+  if (moduleId === 'pipeline') return <SceneBoundary><Suspense fallback={<div className="page-loading"><span className="loading-dot" />正在加载 Pipeline 实验室…</div>}><PipelineVisualizer /></Suspense></SceneBoundary>;
   const concept = concepts[moduleId];
   const tabs: [TeachingTab, string, string][] = [['concept', 'Concept', '原理'], ['visualization', 'Visualization', '可视化'], ['experiment', 'Experiment', '实验']];
   return <div className="lab-page">

@@ -9,7 +9,7 @@ export const courseModules: CourseModule[] = [
   { id: 'memory', title: 'Memory Hierarchy', subtitle: '存储层次', available: false },
   { id: 'cache', title: 'Cache Visualizer', subtitle: '高速缓存', available: true },
   { id: 'bus', title: 'Bus', subtitle: '总线', available: false },
-  { id: 'pipeline', title: 'Pipeline', subtitle: '流水线', available: false },
+  { id: 'pipeline', title: 'Pipeline Visualizer', subtitle: '流水线', available: true },
   { id: 'virtual-memory', title: 'Virtual Memory', subtitle: '虚拟内存', available: false },
 ]
 

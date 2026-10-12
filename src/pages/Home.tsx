@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, type MouseEvent } from 'react';
+import { Suspense, lazy, useEffect, type CSSProperties, type MouseEvent } from 'react';
 import { ArrowRight, ChevronRight, MousePointer2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../components/layout/Brand';
@@ -13,6 +13,7 @@ const courseDescriptions: Record<string, string> = {
   datapath: '让数据流动起来。沿着连接，观察地址、数据与控制信号的传递。',
   instruction: '跟随一条 ADD 指令。从取指到写回，亲手走完一次计算。',
   cache: '理解一次命中。拆分地址，观察缓存查找、主存回填与数据返回。',
+  pipeline: '让指令并行前进。逐周期观察五级流水，发现寄存器之间的数据依赖。',
 };
 
 function scrollToCourses(event: MouseEvent<HTMLAnchorElement>) {
@@ -21,6 +22,7 @@ function scrollToCourses(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 function CourseIllustration({ moduleId }: { moduleId: string }) {
+  if (moduleId === 'pipeline') return <div className="apple-course-art apple-pipeline-art" aria-hidden="true"><div className="apple-pipeline-stages">{['IF','ID','EX','MEM','WB'].map((stage, index) => <span key={stage} style={{ '--pipeline-art-color': ['#1676e8','#9659cc','#d68b21','#28946c','#249aab'][index] } as CSSProperties}>{stage}</span>)}</div><div className="apple-pipeline-waves"><i /><i /><i /></div><span>ONE CYCLE. MULTIPLE INSTRUCTIONS.</span></div>;
   if (moduleId === 'cache') return <div className="apple-course-art apple-cache-art" aria-hidden="true"><div className="apple-cache-cpu">CPU</div><span className="apple-cache-arrow">↓</span><div className="apple-cache-mini"><span>L1 CACHE</span><div><i /><i className="hit" /><i /><i /></div></div><span className="apple-cache-hit">CACHE HIT</span></div>;
   if (moduleId === 'overview') {
     return <div className="apple-course-art apple-overview-art" aria-hidden="true">

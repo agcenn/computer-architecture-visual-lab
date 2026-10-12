@@ -1,11 +1,27 @@
-# Instruction Simulator 与 Cache Visualizer 验证记录
+# Instruction、Cache 与 Pipeline Visualizer 验证记录
 
 验证日期：2026-10-12。
 
-Instruction Execution Visualizer 支持 ADD、SUB、LOAD、STORE、MOV；Cache Visualizer 已接入现有 `#/lab?module=cache` 课程入口。保留浅色界面和九模块教学型 CPU 数据通路，所有模拟运算在浏览器中完成。
+Instruction Execution Visualizer 支持 ADD、SUB、LOAD、STORE、MOV；Cache 与 Pipeline 已接入现有 Lab 课程入口。保留浅色界面和九模块教学型 CPU 数据通路，所有模拟与教学调度在浏览器中完成。
 
-- `npm run build` 成功：TypeScript、Vite 生产构建及 GitHub Pages 路径检查通过。`dist/` 生成 15 个文件，29 处生产资源引用通过检查，base 为 `/computer-architecture-visual-lab/`。
-- `npm test`：40 项通过。其中 24 项覆盖五种指令、逐步完整状态恢复、源与目标重叠、STORE 内存撤销、连续执行、解析和编辑验证、稀疏内存、高地址、32 位溢出与控制信号；16 项覆盖新增 Cache 模型。
+- `npm run build` 成功：TypeScript、Vite 生产构建及 GitHub Pages 路径检查通过。`dist/` 生成 18 个文件，38 处生产资源引用通过检查，base 为 `/computer-architecture-visual-lab/`。
+- `npm test`：56 项通过。其中 24 项覆盖五种指令与数据通路，16 项覆盖 Cache，16 项覆盖 Pipeline。已有 CPU 与 Cache 测试全部保留。
+
+## Pipeline 验证
+
+- IF / ID / EX / MEM / WB 的 3D 外壳、独立颜色、箭头和四个级间寄存器完整显示；模型、Inspector 与时序图共用不可变的 CycleSnapshot。
+- 默认 ADD、SUB、LOAD 的排程为七个周期：Cycle 3 的 ADD 位于 EX、SUB 位于 ID、LOAD 位于 IF。浏览器核对了 Cycle 0 到 7 的全部流水级占用与当前时序列，逐周期回退后状态完全一致。
+- Cycle 3 检测 SUB 读取 R1 的 RAW，生产者 ADD 此时在 EX、到 Cycle 5 才 WB。SUB 的 Cycle 3 / ID 单元格标红，3D ID 外壳和标签同时显示 RAW R1。回退到 Cycle 2 会消除本次检测；之后保留检测记录，不误称较早的读取问题已被写回自动修复。
+- 同周期 WB 先写、ID 后读的边界例子未报 RAW；距离更近且读取较早时报告 RAW。检测使用最近的较早写入者，覆盖 LOAD 基址和 STORE 数据 / 基址；STORE 不产生寄存器写入。
+- 点击时序行、任意阶段单元格或当前 3D 指令，会选中同一指令的五级完整路径；其他当前指令淡化。选择不修改周期和冒险状态。
+- 两条 RAW 示例和三条独立指令预设均可加载；编辑非法寄存器 R8 时保留当前有效程序、周期和选择。支持最多 8 条 ADD / SUB / LOAD / STORE / MOV，十进制或十六进制有符号位移。
+- Play / Pause / Previous / Next / Reset 使用统一周期状态。2× 自动播放在最后一个周期停止；Pause 保持各级占用、冒险记录和时序图不变。Reset 回到 Cycle 0 并取消选择。
+- 1440px、1366px、1024px、768px、390px 宽度无页面横向溢出。手机表格内部滚动，当前周期列在切换或调整窗口后自动进入可见范围；五个 3D 标签不互相覆盖，手机阶段字母为 14px。
+- 默认三条指令的时序行在 1440 × 1120 桌面视口中完整可见；较矮窗口提供主列滚动，播放控制持续可用。
+- 3D 标签由外层 React 统一管理，场景只投影坐标。重复 Pipeline ↔ Cache 切换与刷新未出现 DOM 卸载错误；生产预览完整浏览器检查没有运行时错误、失败资源请求或 404。
+- 离开 Pipeline 会暂停周期播放；进入 Pipeline 会暂停原 Instruction CPU，切回时原 EXECUTE 阶段及 ALU Result = 12 保持。首页提供 5 个已开放课程、5 个规划中课程，HashRouter 刷新正常。
+- 排程器与 placements、依赖检测、周期快照、事件及界面分别组织。注入测试调度器延长 ID 并发出 stall 事件后，快照能反映等待；时序图按 placements 渲染。预留 forward / stall / branch-prediction 事件类型，当前 UI 只启用理想调度与 RAW 检测。
+- Pipeline 展示多条指令的实际周期重叠，不等同于 Instruction 实验的一条单周期指令六个观察点。仅检测冒险，不计算依赖指令的寄存器结果，不将未处理冒险的理想排程解释为正确执行。
 
 ## Cache 验证
 
@@ -20,7 +36,7 @@ Instruction Execution Visualizer 支持 ADD、SUB、LOAD、STORE、MOV；Cache V
 - 地址与数据传输粒子确实随时间移动；拆分字段、索引行、比较标签和整块填充分别有动画。Pause 同时冻结播放进度与 CSS 动画；0.5× / 1× / 2× 速度同步影响观察阶段和线路动画。2× 自动播放完整预设得到 2 Hit、3 Miss、40%。
 - 每次 Next / Previous 以同一个 CacheState 快照和 revision 更新表格、Inspector 与动画；修改未完成访问会先恢复该访问起点。Reset 和“清空并载入预设”都恢复空缓存。
 - 1440px、1024px、768px、390px 宽度无页面或表格横向溢出。较矮窗口与手机会在切换阶段时滚动到当前字段、缓存或数据传输区域，底部播放控制保持可用。
-- 首页显示 4 个已开放课程、6 个规划中课程。Cache 按需加载；从正在播放的 Instruction 实验切入 Cache 会暂停原 CPU，切回时保持原 EXECUTE 状态，ADD 结果仍为 12。
+- Cache 按需加载；从正在播放的 Instruction 实验切入 Cache 会暂停原 CPU，切回时保持原 EXECUTE 状态，ADD 结果仍为 12。
 - 生产预览的 Cache HashRouter 刷新正常；完整浏览器检查未发现运行时错误、失败资源请求或 404。独立参考模型核对 200 次确定性地址访问，缓存内容、返回字节和统计一致。
 - Cache 为只读教学模型，使用固定样例字节，不模拟硬件延迟、写策略或多级缓存；与 Instruction 的 32 位字内存分开管理。步骤是访问过程的观察点，不是硬件时钟周期。
 
@@ -49,5 +65,7 @@ GitHub Pages 已启用，发布源为 GitHub Actions。推送到 main 后，部�
 正式实验网址：https://agcenn.github.io/computer-architecture-visual-lab/#/lab?module=instruction
 
 Cache 实验网址：https://agcenn.github.io/computer-architecture-visual-lab/#/lab?module=cache
+
+Pipeline 实验网址：https://agcenn.github.io/computer-architecture-visual-lab/#/lab?module=pipeline
 
 Three.js 引擎包的体积提示仍存在；生产构建成功，页面与场景分块加载。内存为按 4 字节对齐的 32 位字模型；顶部输入提供当前指令，尚未实现程序列表。

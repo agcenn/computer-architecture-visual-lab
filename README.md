@@ -2,7 +2,7 @@
 
 计算机组成原理 3D 可视化学习实验室。使用 React、TypeScript、Vite、Three.js、React Three Fiber、Drei、Tailwind CSS 和 Zustand；所有教学运算都在浏览器中完成。
 
-当前包含课程首页、Lab 布局、3D CPU 数据通路、组件选择与相机聚焦、Inspector，以及支持 ADD、SUB、LOAD、STORE、MOV 的 Instruction Execution Visualizer。指令按照 FETCH / DECODE / REGISTER READ / EXECUTE / MEMORY / WRITE BACK 六个观察步骤执行，CPU 状态、模块高亮与线路数据同步更新。Cache Visualizer 提供逐步执行的直接映射缓存实验。ALU、Memory、Pipeline 等独立实验会在后续阶段扩展；首页会清楚标示可用状态。
+当前包含课程首页、Lab 布局、3D CPU 数据通路、组件选择与相机聚焦、Inspector，以及支持 ADD、SUB、LOAD、STORE、MOV 的 Instruction Execution Visualizer。指令按照 FETCH / DECODE / REGISTER READ / EXECUTE / MEMORY / WRITE BACK 六个观察步骤执行，CPU 状态、模块高亮与线路数据同步更新。Cache Visualizer 提供逐步执行的直接映射缓存实验，Pipeline Visualizer 提供五级流水的逐周期时序和 RAW 冒险检测。ALU、Memory 等独立实验会在后续阶段扩展；首页会清楚标示可用状态。
 
 CPU 场景采用教学型单周期数据通路：左侧纵向排列 Program Counter → Instruction Memory → Instruction Register → Control Unit / Decoder，右侧展示 Register File、ALUSrc MUX、ALU、Data Memory 和 Write Back 结果选择器。线路从模块端口出发并带有方向箭头，默认灰色；当前观察步骤的 DATA、ADDRESS、CONTROL、MEMORY 分别使用黄色、蓝色、紫色和绿色。悬停高亮，点击选择后相机聚焦、其他模块淡化，Inspector 解释输入、输出与组件作用。
 
@@ -23,7 +23,7 @@ npm run build
 npm run preview
 ```
 
-`npm test` 检查五种指令的解析、六阶段执行、完整状态回退、内存写入撤销、连续指令、32 位运算和数据通路覆盖；也检查 Cache 地址拆分、命中、整块填充、替换、预设统计与跨访问回退。`npm run build` 先进行 TypeScript 检查，再生成 `dist/`，最后自动验证 Pages 的基础路径、输出文件和资源引用。`npm run preview` 用于检查生产构建，例如 `http://localhost:4173/computer-architecture-visual-lab/`。开发服务器和预览服务器仅用于本地开发，线上网站直接运行 `dist/` 的静态文件。
+`npm test` 检查五种指令的解析、六阶段执行、完整状态回退、内存写入撤销、连续指令、32 位运算和数据通路覆盖；也检查 Cache 地址拆分、命中、整块填充、替换、预设统计与跨访问回退，以及 Pipeline 排程、RAW 检测、周期快照和调度器扩展。`npm run build` 先进行 TypeScript 检查，再生成 `dist/`，最后自动验证 Pages 的基础路径、输出文件和资源引用。`npm run preview` 用于检查生产构建，例如 `http://localhost:4173/computer-architecture-visual-lab/`。开发服务器和预览服务器仅用于本地开发，线上网站直接运行 `dist/` 的静态文件。
 
 ## 实验操作
 
@@ -68,6 +68,24 @@ Hit、Miss、Hit Rate 在数据返回 CPU、一次访问完成后更新，避免
 Main Memory 的值是固定的教学示例字节：`((address & 0xFF) * 13 + (address >>> 8) * 17 + 7) & 0xFF`，方便重复实验时核对数据；它与指令实验的 32 位字内存分别建模。此实验只读，展示命中、整块回填、空间局部性和直接映射替换，不模拟真实硬件延迟或写策略。Cache 较小、访问较快，保存近期使用的数据副本，从而减少向较慢主存请求数据的次数。
 
 参考：[Berkeley CS61C Direct-mapped Caches](https://notes.cs61c.org/content/caches-ii/direct-mapped/)、[Cornell CS3410 Caches](https://www.cs.cornell.edu/courses/cs3410/2026sp/notes/caches.html)。
+
+## Pipeline 实验
+
+打开 `#/lab?module=pipeline`，上方是五级 CPU Pipeline 3D 模型，下方是 Pipeline Timing Diagram。IF / ID / EX / MEM / WB 分别表示取指、译码与读寄存器、执行、访存和写回，各有独立颜色。流水级之间的 IF/ID、ID/EX、EX/MEM、MEM/WB 寄存器保存跨周期传递的信息。
+
+默认程序是 `ADD R1,R2,R3`、`SUB R4,R1,R5`、`LOAD R6,0(R2)`。理想调度每周期发射一条指令，每条占五级；3 条指令共需 7 个周期。Cycle 3 时 ADD 在 EX、SUB 在 ID、LOAD 在 IF。Cycle 0 表示尚未发射。
+
+Previous Cycle / Next Cycle / Play / Pause / Reset 共用周期快照。切换周期会同时更新 3D 模型、当前时序列、各级占用和已检测冒险。点击某条指令，可高亮它从 IF 到 WB 的完整路径；支持从图表、指令列表或 3D 当前指令选择。
+
+首版使用**理想流水调度，仅检测冒险**。SUB 在 Cycle 3 的 ID 阶段需要读取 R1，而较早的 ADD 要到 Cycle 5 的 WB 才提供 R1，形成 RAW（Read After Write）冒险。图表在发生读取的单元格标红，并显示寄存器 R1、生产者、消费者和写回周期；之后保留该检测记录，回退到读取之前会恢复未检测状态。检测本身不会改变排程，也不宣称依赖指令已正确计算；尚未处理的数据依赖需要后续 forwarding 或 stall 机制。
+
+本模型采用同一周期先 WB 写入、再 ID 读取的寄存器堆约定。因此生产者 WB 与消费者 ID 同周期时可以安全读取；检测会选择每个源寄存器最近的较早写入指令。LOAD 的基址寄存器、STORE 的基址与存储数据寄存器都属于读取源。
+
+可输入最多 8 条 ADD / SUB / LOAD / STORE / MOV 指令，一行一条，寄存器为 R0–R7。LOAD / STORE 使用 `位移(基址)`，例如 `LOAD R6,0(R2)`、`STORE R1,4(R2)`；与前面的单指令实验各自使用适合教学目标的语法。程序编辑不会在应用之前修改排程；非法输入保留当前有效程序。
+
+调度器、周期快照、依赖检测与界面渲染分别建模，为后续加入 Forwarding、Stall 和 Branch Prediction 保留扩展位置；当前不显示可开启但尚未实现的策略开关。
+
+教学依据：[Berkeley CS61C 五级流水](https://notes.cs61c.org/content/pipeline/five-stage-pipeline/)、[Berkeley CS61C 数据冒险](https://notes.cs61c.org/content/pipeline-hazards/data-hazards/)、[Cornell CS3410 流水线与寄存器堆时序](https://www.cs.cornell.edu/courses/cs3410/2017sp/schedule/slides/06-pipeline.pdf)。
 
 ## GitHub Pages 已配置项
 
@@ -137,6 +155,7 @@ src/components/three/        3D 场景、模块、数据流和相机
 src/data/                    课程与指令教学数据
 src/experiments/instruction/ 指令实验界面
 src/experiments/cache/       Cache 实验界面与 2.5D 动画
+src/experiments/pipeline/    流水线界面、3D 模型与时序图
 src/pages/                   Home 与 Lab
 src/store/                   教学状态
 src/types/                   TypeScript 类型
@@ -149,3 +168,5 @@ dist/                        构建结果（build 后生成）
 `src/store/cpuStore.ts` 统一保存实际 CPU 状态、执行前快照、历史观察点、播放状态、组件选择和 `executionRevision`。Next / Previous 将相应完整快照应用到当前状态；Reset 恢复执行前快照。3D 场景与 Inspector 读取同一状态，`executionRevision` 让线路动画在切换、回退和重播时重新开始，场景自身不执行 CPU 写入。增加指令时可扩展 `Instruction`、解析与运算规则、阶段信号及测试，沿用快照恢复和播放机制。页面与布局组件继续组织课程入口、教学标签页、Inspector 和 Timeline。
 
 `src/types/cache.ts` 定义地址字段、缓存行、访问快照和阶段类型；`src/data/cache.ts` 提供地址拆分、教学内存与纯函数访问模拟；`src/store/cacheStore.ts` 管理缓存、统计、预设序列与可逆访问历史。`src/experiments/cache/CacheVisualizer.tsx` 从同一状态渲染字段、缓存表、Inspector 和线路动画。Cache 页面按需加载，离开实验会暂停自动播放。
+
+`src/types/pipeline.ts` 定义指令读写集、流水级占用、RAW 记录、周期快照、调度器和事件类型。`src/data/pipeline.ts` 将调度器给出的 `placements` 与依赖检测投影为不可变的 `CycleSnapshot`；`src/store/pipelineStore.ts` 统一管理周期、选择和播放状态。时序图和 3D 场景直接读取相同快照与 placements，不各自计算理想排程。后续可替换 `PipelineScheduler`，使用 stall / forward / branch-prediction 事件扩展策略，沿用展示与回退结构。
