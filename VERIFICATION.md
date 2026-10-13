@@ -1,11 +1,21 @@
 # Instruction、Cache 与 Pipeline Visualizer 验证记录
 
-验证日期：2026-10-12。
+验证日期：2026-10-13。
 
 Instruction Execution Visualizer 支持 ADD、SUB、LOAD、STORE、MOV；Cache 与 Pipeline 已接入现有 Lab 课程入口。保留浅色界面和九模块教学型 CPU 数据通路，所有模拟与教学调度在浏览器中完成。
 
-- `npm run build` 成功：TypeScript、Vite 生产构建及 GitHub Pages 路径检查通过。`dist/` 生成 18 个文件，38 处生产资源引用通过检查，base 为 `/computer-architecture-visual-lab/`。
+- `npm run build` 成功：TypeScript、Vite 生产构建及 GitHub Pages 路径检查通过。`dist/` 生成 23 个文件，42 处生产资源引用通过检查，base 为 `/computer-architecture-visual-lab/`。
 - `npm test`：56 项通过。其中 24 项覆盖五种指令与数据通路，16 项覆盖 Cache，16 项覆盖 Pipeline。已有 CPU 与 Cache 测试全部保留。
+
+## 配图与精简验证
+
+- 新增处理器、缓存与流水线三张概念插画；1600 × 900 WebP 共 147,878 字节。首页首屏与三个课程封面使用图片，指令和数据通路卡片保留准确代码图示。
+- 配图使用正常 Vite import；生产预览与 GitHub Pages 子路径下的图片 URL 指向 `/computer-architecture-visual-lab/assets/`。非首屏图片使用 lazy loading，设置固有宽高与异步解码。
+- 首页保留 5 个实验和交互 CPU，去除重复宣传区；5 个规划模块默认折叠。1440、1024、768、390px 下图片完整加载，无页面横向溢出。
+- Cache / Pipeline 的长说明默认折叠，展开后显示完整概念图与教学边界；没有隐藏实时状态、缓存表、命中率、RAW 读取与写回周期或操作控件。手机展开说明后可滚动到全文，底部控件不遮挡内容。
+- Instruction 保留 PC、当前指令、ALU 输入输出、控制信号、寄存器和内存；EXECUTE 仍显示 5、7、12。原理页保留三张要点卡，模型边界放入可展开说明。
+- README 从 173 行精简到 47 行，加入实际网站预览。完整运行与部署步骤迁入 `docs/DEPLOYMENT.md`，实验语法、边界、扩展结构和教学依据迁入 `docs/MODELS.md`；生成工具与完整提示词记录在 `docs/VISUAL_ASSETS.md`。
+- 生产预览重新完成图片加载、展开说明、课程切换、Pipeline 七周期及回退检查，没有运行错误或失败资源；Cache 的地址传输动画、访问快照和预设统计亦按既有脚本复查。
 
 ## Pipeline 验证
 

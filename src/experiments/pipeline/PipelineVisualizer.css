@@ -117,6 +117,13 @@
 .pipeline-teaching-note svg { flex-shrink: 0; margin-top: 2px; }
 .pipeline-teaching-note h3 { font-size: 11px; font-weight: 500; }
 .pipeline-teaching-note p { font-size: 11px; line-height: 1.9; margin-top: 8px; color: #90909b; }
+.pipeline-main .lab-title h1 { margin-top: 0; }
+.pipeline-teaching-note > div { min-width: 0; flex: 1; }
+.pipeline-concept-details { margin-top: 10px; }
+.pipeline-concept-details summary { color: #0066cc; font-size: 10px; cursor: pointer; padding-block: 4px; }
+.pipeline-concept-details figure { margin: 9px 0 0; }
+.pipeline-concept-details img { display: block; width: 100%; height: auto; max-height: 110px; aspect-ratio: 16/9; object-fit: contain; border-radius: 11px; background: #fff; }
+.pipeline-concept-details figcaption { color: #9a9aa2; font-size: 8px; margin-top: 4px; }
 .pipeline-controls { padding-top: 15px; padding-bottom: 15px; }
 .pipeline-controls .playback { max-width: 1050px; margin: 0 auto; padding-top: 0; border-top: 0; }
 .pipeline-controls .playback-buttons { margin-left: 0; gap: 11px; }

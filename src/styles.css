@@ -318,3 +318,6 @@ svg { flex-shrink: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+.lab-model-details { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 13px; }
+.lab-model-details summary { color: var(--muted); font-size: 12px; cursor: pointer; }
+.lab-model-details .model-note { margin-top: 10px; }
