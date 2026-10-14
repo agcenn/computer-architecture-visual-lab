@@ -6,6 +6,14 @@
 
 ![网站预览](docs/screenshots/home.webp)
 
+## 35 秒认识实验室
+
+[![让原理，动起来。点击观看宣传片](public/media/architecture-trailer-cover.jpg)](https://agcenn.github.io/computer-architecture-visual-lab/media/architecture-trailer.mp4)
+
+1080p 横版 · 中文字幕 · 原创电子配乐。跟随一条 ADD，观察数据流动、状态回退、Cache 命中与流水线 RAW 冒险。
+
+[▶ 在线播放](https://agcenn.github.io/computer-architecture-visual-lab/media/architecture-trailer.mp4) · [MP4 文件](public/media/architecture-trailer.mp4) · [中文字幕](public/media/architecture-trailer.zh-CN.srt)
+
 ## 五个实验入口
 
 | 实验 | 看什么 |
